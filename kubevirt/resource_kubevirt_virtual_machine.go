@@ -112,7 +112,7 @@ func resourceKubevirtVirtualMachineUpdate(d *schema.ResourceData, meta interface
 
 	ops := patchMetadata("metadata.0.", "/metadata/", d)
 	if d.HasChange("spec") {
-		specOps, err := patchVirtualMachineSpec("/spec", "spec", d)
+		specOps, err := patchVirtualMachineSpec("/spec", "spec.0.", d)
 		if err != nil {
 			return err
 		}

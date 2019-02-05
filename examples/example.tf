@@ -7,7 +7,7 @@ resource "kubevirt_virtual_machine" "myvm" {
   }
 
   spec {
-    running = false
+    running = true
     memory = "8Mi"
     disks {
         name = "mydisk",

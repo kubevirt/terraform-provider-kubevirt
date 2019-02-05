@@ -12,7 +12,7 @@ func expandVirtualMachineSpec(l []interface{}) (*map[string]interface{}, error) 
 		return &obj, nil
 	}
 	spec := l[0].(map[string]interface{})
-	obj["spec"] = map[string]interface{}{
+	obj = map[string]interface{}{
 		"running": spec["running"].(bool),
 		"template": map[string]interface{}{
 			"spec": map[string]interface{}{
@@ -84,8 +84,7 @@ func flattenVMMetadata(meta map[string]interface{}) []map[string]interface{} {
 	return []map[string]interface{}{m}
 }
 
-func flattenVMSpec(obj map[string]interface{}) []map[string]interface{} {
-	specglobal := obj["spec"].(map[string]interface{})
+func flattenVMSpec(specglobal map[string]interface{}) []map[string]interface{} {
 	template := specglobal["template"].(map[string]interface{})
 	spec := template["spec"].(map[string]interface{})
 	domain := spec["domain"].(map[string]interface{})
@@ -146,7 +145,22 @@ func patchMetadata(keyPrefix, pathPrefix string, d *schema.ResourceData) PatchOp
 
 func patchVirtualMachineSpec(pathPrefix, prefix string, d *schema.ResourceData) (PatchOperations, error) {
 	ops := make([]PatchOperation, 0)
-	// TODO: implement
+
+	if d.HasChange(prefix + "running") {
+		v := d.Get(prefix + "running").(bool)
+		ops = append(ops, &ReplaceOperation{
+			Path:  pathPrefix + "/running",
+			Value: v,
+		})
+	}
+
+	if d.HasChange(prefix + "memory") {
+		v := d.Get(prefix + "memory").(string)
+		ops = append(ops, &ReplaceOperation{
+			Path:  pathPrefix + "/template/spec/domain/resources/requests/memory",
+			Value: v,
+		})
+	}
 
 	return ops, nil
 }
