@@ -1,0 +1,42 @@
+sudo: required
+dist: xenial
+
+branches:
+  only:
+  - master
+  - "/^v[0-9]/"
+
+jobs:
+  include:
+    - stage: Tests
+      name: "Default (minikube with latest k8s)"
+
+    - name: "oc cluster (latest okd)"
+      env: CPLATFORM=oc_cluster
+
+    - name: "minishift (latest okd)"
+      env: CPLATFORM=minishift
+
+    - name: "minikube (operator)"
+      env: USE_OPERATOR=true
+    - name: "minishift (operator)"
+      env: CPLATFORM=minishift USE_OPERATOR=true
+
+cache:
+  directories:
+  - cache
+  - "~/.minishift/cache"
+  - "~/.minikube/cache"
+
+before_script:
+## FIXME Workaround for https://github.com/kubernetes/kubernetes/issues/61058
+### And https://github.com/LiliC/travis-minikube/blob/e0f26f7b388057f51a0e2558afd5f990e07b6c49/.travis.yml#L11
+- sudo mount --make-rshared /
+
+- bash -x ci/prepare-host $CPLATFORM
+- bash -x ci/prepare-host virtctl
+- bash -x ci/start-cluster $CPLATFORM $CVER
+- bash -x ci/deploy-kubevirt $CPLATFORM
+
+script:
+- timeout 5m bash -x test.sh
