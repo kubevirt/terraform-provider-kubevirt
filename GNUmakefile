@@ -6,7 +6,7 @@ PKG_NAME=kubevirt
 default: build
 
 build: fmtcheck
-	go install
+	go build 
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1

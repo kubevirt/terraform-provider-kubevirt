@@ -17,6 +17,7 @@ func expandVirtualMachineSpec(l []interface{}, metadata map[string]interface{}) 
 	labels := metadata["labels"].(map[string]interface{})
 	spec := l[0].(map[string]interface{})
 	cloudInit := spec["cloud_init_no_cloud"].(map[string]interface{})
+	memory := spec["memory"].([]interface{})[0].(map[string]interface{})
 	obj = map[string]interface{}{
 		"running": spec["running"].(bool),
 		"template": map[string]interface{}{
@@ -27,7 +28,7 @@ func expandVirtualMachineSpec(l []interface{}, metadata map[string]interface{}) 
 				"domain": map[string]interface{}{
 					"resources": map[string]interface{}{
 						"requests": map[string]string{
-							"memory": spec["memory"].(string),
+							"memory": memory["request"].(string),
 						},
 					},
 					"devices": map[string]interface{}{
@@ -45,27 +46,32 @@ func expandVirtualMachineSpec(l []interface{}, metadata map[string]interface{}) 
 func expandVirtualMachineDisksSpec(d []interface{}, clInit *map[string]interface{}) []map[string]interface{} {
 	// Initialize disks slice:
 	disksSize := len(d)
-	if clInit != nil {
+	if len(*clInit) > 0 {
 		disksSize++
 	}
 	disks := make([]map[string]interface{}, disksSize)
 
 	// Add all user defined disks:
 	for i, v := range d {
+		disk := v.(map[string]interface{})
+		diskspec := disk["disk"].(map[string]interface{})
+
 		disks[i] = map[string]interface{}{
-			"name": v.(map[string]interface{})["name"].(string),
+			"name": disk["name"].(string),
 			"disk": map[string]string{
-				"bus": v.(map[string]interface{})["bus"].(string),
+				"bus": diskspec["bus"].(string),
 			},
 		}
 	}
 
 	// Add cloud-init disk:
-	disks[disksSize-1] = map[string]interface{}{
-		"name": "cloud_init_volume_terraform",
-		"disk": map[string]string{
-			"bus": "virtio",
-		},
+	if len(*clInit) > 0 {
+		disks[disksSize-1] = map[string]interface{}{
+			"name": "cloud_init_volume_terraform",
+			"disk": map[string]string{
+				"bus": "virtio",
+			},
+		}
 	}
 	return disks
 }
@@ -73,7 +79,7 @@ func expandVirtualMachineDisksSpec(d []interface{}, clInit *map[string]interface
 func expandVirtualMachineVolumesSpec(d []interface{}, clInit *map[string]interface{}) []map[string]interface{} {
 	// Initialize volumes slice:
 	volumesSize := len(d)
-	if clInit != nil {
+	if len(*clInit) > 0 {
 		volumesSize++
 	}
 	volumes := make([]map[string]interface{}, volumesSize)
@@ -93,9 +99,11 @@ func expandVirtualMachineVolumesSpec(d []interface{}, clInit *map[string]interfa
 	}
 
 	// Add cloud-init volume:
-	volumes[volumesSize-1] = map[string]interface{}{
-		"name":             "cloud_init_volume_terraform",
-		"cloudInitNoCloud": *clInit,
+	if len(*clInit) > 0 {
+		volumes[volumesSize-1] = map[string]interface{}{
+			"name":             "cloud_init_volume_terraform",
+			"cloudInitNoCloud": *clInit,
+		}
 	}
 	return volumes
 }
@@ -134,8 +142,12 @@ func flattenVMSpec(specglobal map[string]interface{}) []map[string]interface{} {
 	//networks := spec["networks"].([]interface{})
 
 	m := map[string]interface{}{
-		"running":             specglobal["running"].(bool),
-		"memory":              requests["memory"].(string),
+		"running": specglobal["running"].(bool),
+		"memory": [1]map[string]interface{}{
+			{
+				"request": requests["memory"].(string),
+			},
+		},
 		"disks":               flattenVMDisksSpec(disks, volumes),
 		"cloud_init_no_cloud": flattenCloudInitSpec(volumes),
 		//"interfaces":          flattenVMInterfacesSpec(interfaces, networks),
@@ -158,13 +170,16 @@ func flattenCloudInitSpec(volumes []interface{}) map[string]interface{} {
 func flattenVMDisksSpec(disks []interface{}, volumes []interface{}) []map[string]interface{} {
 	tdisks := make([]map[string]interface{}, len(disks))
 	for i, v := range disks {
-		diskName := v.(map[string]interface{})["name"].(string)
+		disk := v.(map[string]interface{})
+		diskName := disk["name"].(string)
 		if diskName == CloudInitDiskName {
 			continue
 		}
 		tdisks[i] = map[string]interface{}{
 			"name": diskName,
-			"bus":  v.(map[string]interface{})["disk"].(map[string]interface{})["bus"].(string),
+			"disk": map[string]string{
+				"bus": disk["disk"].(map[string]interface{})["bus"].(string),
+			},
 			"volume": map[string]string{
 				"image": findVolumeImageByDiskName(diskName, volumes),
 			},
