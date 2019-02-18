@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,6 +32,18 @@ func resourceKubevirtVirtualMachine() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"ephemeral": {
+				Type:        schema.TypeBool,
+				Description: "If true ephemeral virtual machine instance will be created. When destroyed it won't be accessible again.",
+				Default:     false,
+				Optional:    true,
+			},
+			"wait": {
+				Type:        schema.TypeBool,
+				Description: "Specify if we should wait for virtual machine to be running/stopped/destroyed.",
+				Default:     false,
+				Optional:    true,
+			},
 			"metadata": namespacedMetadataSchema("virtualmachine", true),
 			"spec": {
 				Type:        schema.TypeList,
@@ -54,8 +67,21 @@ func vmResource(meta *interface{}) kubernetes.NamespaceableResourceInterface {
 	})
 }
 
+func vmiResource(meta *interface{}) kubernetes.NamespaceableResourceInterface {
+	client := (*meta).(kubernetes.Interface)
+	return client.Resource(k8s_schema.GroupVersionResource{
+		Group:    "kubevirt.io",
+		Version:  "v1alpha3",
+		Resource: "virtualmachineinstances",
+	})
+}
+
 func resourceKubevirtVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
+	// Manage either VM or VMI based on ephemeral parameter:
 	conn := vmResource(&meta)
+	if d.Get("ephemeral").(bool) {
+		conn = vmiResource(&meta)
+	}
 
 	// Create virtual machine definition:
 	vmdefinition := make(map[string]interface{})
@@ -65,7 +91,7 @@ func resourceKubevirtVirtualMachineCreate(d *schema.ResourceData, meta interface
 	vmdefinition["metadata"] = map[string]string{
 		"name": metadata["name"].(string),
 	}
-	vmdefinition["spec"], _ = expandVirtualMachineSpec(d.Get("spec").([]interface{}))
+	vmdefinition["spec"], _ = expandVirtualMachineSpec(d.Get("spec").([]interface{}), metadata)
 	vm := &unstructured.Unstructured{
 		Object: vmdefinition,
 	}
@@ -78,6 +104,33 @@ func resourceKubevirtVirtualMachineCreate(d *schema.ResourceData, meta interface
 	log.Printf("[INFO] Submitted new virtual machine: %#v", out)
 
 	d.SetId(out.GetName())
+	name := out.GetName()
+
+	running := d.Get("spec").([]interface{})[0].(map[string]interface{})["running"].(bool)
+	if d.Get("wait").(bool) && running {
+		connvmi := vmiResource(&meta)
+		stateConf := &resource.StateChangeConf{
+			Target:         []string{"Running"},
+			Pending:        []string{"Pending", "Scheduling", "Scheduled"},
+			Timeout:        d.Timeout(schema.TimeoutCreate),
+			Delay:          2 * time.Second,
+			NotFoundChecks: 2,
+			Refresh: func() (interface{}, string, error) {
+				vm, err := connvmi.Namespace("default").Get(name, meta_v1.GetOptions{})
+				if err != nil {
+					return vm, "", nil
+				}
+
+				statusPhase := fmt.Sprintf("%v", vm.Object["status"].(map[string]interface{})["phase"])
+				log.Printf("[DEBUG] Virtual machine %s status received: %#v", vm.GetName(), statusPhase)
+				return vm, statusPhase, nil
+			},
+		}
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("%s", err)
+		}
+	}
 
 	return resourceKubevirtVirtualMachineRead(d, meta)
 }
@@ -138,10 +191,47 @@ func resourceKubevirtVirtualMachineDelete(d *schema.ResourceData, meta interface
 	conn := vmResource(&meta)
 
 	name := d.Id()
+
+	// Remove virtual machine:
 	log.Printf("[INFO] Deleting virtual machine: %#v", name)
 	err := conn.Namespace("default").Delete(name, &meta_v1.DeleteOptions{})
 	if err != nil {
 		return err
+	}
+
+	// Remove virtual machine instance:
+	if running := d.Get("spec").([]interface{})[0].(map[string]interface{})["running"].(bool); running {
+		log.Printf("[INFO] Deleting virtual machine instance: %#v", name)
+		err := vmiResource(&meta).Namespace("default").Delete(name, &meta_v1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
+
+		// Wait for virtual machine instance to be removed:
+		if d.Get("wait").(bool) {
+			connvmi := vmiResource(&meta)
+			stateConf := &resource.StateChangeConf{
+				Pending: []string{"Running", "Succeeded"},
+				Timeout: d.Timeout(schema.TimeoutCreate),
+				Refresh: func() (interface{}, string, error) {
+					vm, err := connvmi.Namespace("default").Get(name, meta_v1.GetOptions{})
+					if err != nil {
+						if errors.IsNotFound(err) {
+							return nil, "", nil
+						}
+						return vm, "", err
+					}
+
+					statusPhase := fmt.Sprintf("%v", vm.Object["status"].(map[string]interface{})["phase"])
+					log.Printf("[DEBUG] Virtual machine %s status received: %#v", vm.GetName(), statusPhase)
+					return vm, statusPhase, nil
+				},
+			}
+			_, err = stateConf.WaitForState()
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+		}
 	}
 
 	log.Printf("[INFO] virtual machine %s deleted", name)
@@ -155,6 +245,7 @@ func resourceKubevirtVirtualMachineExists(d *schema.ResourceData, meta interface
 
 	name := d.Id()
 	log.Printf("[INFO] Checking virtual machine %s", name)
+	d.Get("")
 	_, err := conn.Namespace("default").Get(name, meta_v1.GetOptions{})
 	if err != nil {
 		if statusErr, ok := err.(*errors.StatusError); ok && statusErr.ErrStatus.Code == 404 {

@@ -7,10 +7,10 @@ import (
 
 func virtualMachineSpecFields() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"disks": {
+		"interface": {
 			Type:        schema.TypeList,
 			Optional:    true,
-			Description: "Virtual machine domain specification",
+			Description: "Virtual machine interfaces specification.",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"name": {
@@ -31,10 +31,145 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 				},
 			},
 		},
-		"memory": {
+		"disks": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Virtual machine disks specification",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "Name of disk",
+					},
+					// TODO: Should we change this to TypeList for each disk type?
+					"disk": {
+						Type:        schema.TypeMap,
+						Optional:    true,
+						Description: "Disk type",
+					},
+					// TODO: Should we change this to TypeList for each volume type?
+					"volume": {
+						Type:        schema.TypeMap,
+						Optional:    true,
+						Description: "Volume specification",
+					},
+				},
+			},
+		},
+		"interfaces": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Virtual machine interfaces specification",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "Name of interface",
+					},
+					// TODO: Should we change this to TypeList for each interface type?
+					"interface": {
+						Type:        schema.TypeMap,
+						Optional:    true,
+						Description: "Interface type",
+					},
+					// TODO: Should we change this to TypeList for each network type?
+					"network": {
+						Type:        schema.TypeMap,
+						Optional:    true,
+						Description: "Network specification",
+					},
+				},
+			},
+		},
+		// TODO: clock, bootloader, graphics, Features
+		"machine_type": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Virtual machine memory",
+			Description: "Virtual machine machine type",
+		},
+		"firmware": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Virtual machine SMBIOS Firmware",
+		},
+		"cpu": {
+			Type:        schema.TypeList,
+			Description: "Virtual machine CPU definition",
+			Required:    true,
+			MaxItems:    1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"model": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "CPU model",
+					},
+					"dedicated": {
+						Type:        schema.TypeBool,
+						Optional:    true,
+						Description: "Indicate to allocate dedicated CPU resource to the VM",
+					},
+					"cores": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Description: "Number of CPU cores",
+					},
+					"sockets": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Description: "Number of CPU sockets",
+					},
+					"threds": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Description: "Number of CPU threds",
+					},
+					"request": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Description: "Is converted to its core value, which is potentially fractional, and multiplied by 1024. The greater of this number or 2 is used as the value of the --cpu-shares flag in the docker run commands",
+					},
+					"limit": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Description: "Is converted to its millicore value and multiplied by 100. The resulting value is the total amount of CPU time that a container can use every 100ms. A container cannot use more than its share of CPU time during this interval.",
+					},
+				},
+			},
+		},
+		"memory": {
+			Type:        schema.TypeList,
+			Description: "Virtual machine memory definition",
+			Required:    true,
+			MaxItems:    1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"hugepages": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "Hugepage page size",
+					},
+					"request": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Description: "The memory request for the pod",
+					},
+					"limit": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Description: "The memory limit for the pod",
+					},
+				},
+			},
+		},
+		"cloud_init_no_cloud": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Description: `Represents a cloud-init NoCloud user-data source. The NoCloud data will be added
+			              as a disk to the virtual machine. A proper cloud-init installation is required inside the guest.
+			              More info: https://kubevirt.io/api-reference/master/definitions.html#_v1_cloudinitnocloudsource`,
 		},
 		"running": {
 			Type:        schema.TypeBool,

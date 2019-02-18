@@ -6,15 +6,23 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func expandVirtualMachineSpec(l []interface{}) (*map[string]interface{}, error) {
+// CloudInitDiskName is name of disk/volume which is used for cloud init created by terraform kubevirt provider
+const CloudInitDiskName = "cloud_init_volume_terraform"
+
+func expandVirtualMachineSpec(l []interface{}, metadata map[string]interface{}) (*map[string]interface{}, error) {
 	obj := make(map[string]interface{})
 	if len(l) == 0 || l[0] == nil {
 		return &obj, nil
 	}
+	labels := metadata["labels"].(map[string]interface{})
 	spec := l[0].(map[string]interface{})
+	cloudInit := spec["cloud_init_no_cloud"].(map[string]interface{})
 	obj = map[string]interface{}{
 		"running": spec["running"].(bool),
 		"template": map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"labels": labels,
+			},
 			"spec": map[string]interface{}{
 				"domain": map[string]interface{}{
 					"resources": map[string]interface{}{
@@ -23,10 +31,10 @@ func expandVirtualMachineSpec(l []interface{}) (*map[string]interface{}, error) 
 						},
 					},
 					"devices": map[string]interface{}{
-						"disks": expandVirtualMachineDisksSpec(spec["disks"].([]interface{})),
+						"disks": expandVirtualMachineDisksSpec(spec["disks"].([]interface{}), &cloudInit),
 					},
 				},
-				"volumes": expandVirtualMachineVolumesSpec(spec["disks"].([]interface{})),
+				"volumes": expandVirtualMachineVolumesSpec(spec["disks"].([]interface{}), &cloudInit),
 			},
 		},
 	}
@@ -34,8 +42,15 @@ func expandVirtualMachineSpec(l []interface{}) (*map[string]interface{}, error) 
 	return &obj, nil
 }
 
-func expandVirtualMachineDisksSpec(d []interface{}) []map[string]interface{} {
-	disks := make([]map[string]interface{}, len(d))
+func expandVirtualMachineDisksSpec(d []interface{}, clInit *map[string]interface{}) []map[string]interface{} {
+	// Initialize disks slice:
+	disksSize := len(d)
+	if clInit != nil {
+		disksSize++
+	}
+	disks := make([]map[string]interface{}, disksSize)
+
+	// Add all user defined disks:
 	for i, v := range d {
 		disks[i] = map[string]interface{}{
 			"name": v.(map[string]interface{})["name"].(string),
@@ -44,11 +59,26 @@ func expandVirtualMachineDisksSpec(d []interface{}) []map[string]interface{} {
 			},
 		}
 	}
+
+	// Add cloud-init disk:
+	disks[disksSize-1] = map[string]interface{}{
+		"name": "cloud_init_volume_terraform",
+		"disk": map[string]string{
+			"bus": "virtio",
+		},
+	}
 	return disks
 }
 
-func expandVirtualMachineVolumesSpec(d []interface{}) []map[string]interface{} {
-	volumes := make([]map[string]interface{}, len(d))
+func expandVirtualMachineVolumesSpec(d []interface{}, clInit *map[string]interface{}) []map[string]interface{} {
+	// Initialize volumes slice:
+	volumesSize := len(d)
+	if clInit != nil {
+		volumesSize++
+	}
+	volumes := make([]map[string]interface{}, volumesSize)
+
+	// Add all user defined volumes:
 	for i, v := range d {
 		vv := v.(map[string]interface{})
 		volume := vv["volume"].(map[string]interface{})
@@ -60,6 +90,12 @@ func expandVirtualMachineVolumesSpec(d []interface{}) []map[string]interface{} {
 				"image": volumeimage,
 			},
 		}
+	}
+
+	// Add cloud-init volume:
+	volumes[volumesSize-1] = map[string]interface{}{
+		"name":             "cloud_init_volume_terraform",
+		"cloudInitNoCloud": *clInit,
 	}
 	return volumes
 }
@@ -90,28 +126,47 @@ func flattenVMSpec(specglobal map[string]interface{}) []map[string]interface{} {
 	domain := spec["domain"].(map[string]interface{})
 	devices := domain["devices"].(map[string]interface{})
 	disks := devices["disks"].([]interface{})
+	//interfaces := devices["interfaces"].([]interface{})
 	resources := domain["resources"].(map[string]interface{})
 	requests := resources["requests"].(map[string]interface{})
 
 	volumes := spec["volumes"].([]interface{})
+	//networks := spec["networks"].([]interface{})
 
 	m := map[string]interface{}{
-		"running": specglobal["running"].(bool),
-		"memory":  requests["memory"].(string),
-		"disks":   flattenVMDisksSpec(disks, volumes),
+		"running":             specglobal["running"].(bool),
+		"memory":              requests["memory"].(string),
+		"disks":               flattenVMDisksSpec(disks, volumes),
+		"cloud_init_no_cloud": flattenCloudInitSpec(volumes),
+		//"interfaces":          flattenVMInterfacesSpec(interfaces, networks),
 	}
 
 	return []map[string]interface{}{m}
 }
 
+func flattenCloudInitSpec(volumes []interface{}) map[string]interface{} {
+	for _, v := range volumes {
+		diskName := v.(map[string]interface{})["name"].(string)
+		if diskName == CloudInitDiskName {
+			return v.(map[string]interface{})["cloudInitNoCloud"].(map[string]interface{})
+		}
+	}
+
+	return nil
+}
+
 func flattenVMDisksSpec(disks []interface{}, volumes []interface{}) []map[string]interface{} {
 	tdisks := make([]map[string]interface{}, len(disks))
 	for i, v := range disks {
+		diskName := v.(map[string]interface{})["name"].(string)
+		if diskName == CloudInitDiskName {
+			continue
+		}
 		tdisks[i] = map[string]interface{}{
-			"name": v.(map[string]interface{})["name"].(string),
+			"name": diskName,
 			"bus":  v.(map[string]interface{})["disk"].(map[string]interface{})["bus"].(string),
 			"volume": map[string]string{
-				"image": findVolumeImageByDiskName(v.(map[string]interface{})["name"].(string), volumes),
+				"image": findVolumeImageByDiskName(diskName, volumes),
 			},
 		}
 	}
