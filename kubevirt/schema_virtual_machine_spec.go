@@ -97,7 +97,7 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 		"cpu": {
 			Type:        schema.TypeList,
 			Description: "Virtual machine CPU definition",
-			Required:    true,
+			Optional:    true,
 			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
@@ -142,7 +142,7 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 		"memory": {
 			Type:        schema.TypeList,
 			Description: "Virtual machine memory definition",
-			Required:    true,
+			Optional:    true,
 			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
@@ -152,7 +152,7 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 						Description: "Hugepage page size",
 					},
 					"request": {
-						Type:        schema.TypeInt,
+						Type:        schema.TypeString,
 						Optional:    true,
 						Description: "The memory request for the pod",
 					},
