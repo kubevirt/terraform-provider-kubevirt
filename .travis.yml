@@ -1,33 +1,35 @@
 sudo: required
 dist: xenial
 
+language: go
+
 branches:
   only:
   - master
   - "/^v[0-9]/"
+
+before_install:
+  # Setup dependency management tool
+  - curl -L -s https://github.com/golang/dep/releases/download/v0.3.1/dep-linux-amd64 -o $GOPATH/bin/dep
+  - chmod +x $GOPATH/bin/dep
+  # Setup terraform
+  - wget https://releases.hashicorp.com/terraform/0.11.11/terraform_0.11.11_linux_amd64.zip
+  - unzip terraform_0.11.11_linux_amd64.zip
+  - mv terraform /usr/local/bin/
+  - chmod +x /usr/local/bin/terraform
+
+install:
+  - dep ensure
 
 jobs:
   include:
     - stage: Tests
       name: "Default (minikube with latest k8s)"
 
-    - name: "oc cluster (latest okd)"
-      env: CPLATFORM=oc_cluster
-
-    - name: "minishift (latest okd)"
-      env: CPLATFORM=minishift
-
-    - name: "minikube (operator)"
-      env: USE_OPERATOR=true
-    - name: "minishift (operator)"
-      env: CPLATFORM=minishift USE_OPERATOR=true
-
 cache:
-  directories:
-  - cache
-  - "~/.minishift/cache"
-  - "~/.minikube/cache"
-
+  - directories:
+    - cache
+    - "~/.minikube/cache"
 before_script:
 ## FIXME Workaround for https://github.com/kubernetes/kubernetes/issues/61058
 ### And https://github.com/LiliC/travis-minikube/blob/e0f26f7b388057f51a0e2558afd5f990e07b6c49/.travis.yml#L11
@@ -39,4 +41,4 @@ before_script:
 - bash -x ci/deploy-kubevirt $CPLATFORM
 
 script:
-- timeout 5m bash -x test.sh
+- timeout 20m bash -x test.sh
