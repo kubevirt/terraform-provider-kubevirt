@@ -3,9 +3,11 @@
 echo "$(minikube ip) minikube" | sudo tee -a /etc/hosts
 
 ## No HW virt
-kubectl create configmap -n kubevirt kubevirt-config --from-literal debug.useEmulation=true
+kubectl create configmap -n kubevirt kubevirt-config --from-literal debug.useEmulation=true --from-literal feature-gates=DataVolumes
 kubectl scale --replicas=0 deployment/virt-controller -n kubevirt
 kubectl scale --replicas=2 deployment/virt-controller -n kubevirt
+kubectl scale --replicas=0 deployment/virt-api -n kubevirt
+kubectl scale --replicas=2 deployment/virt-api -n kubevirt
 
 ## Prepare CDI
 export CDI_VERSION=v1.5.0
@@ -25,6 +27,7 @@ do
   sleep 6;
 done
 
+
 ## Build kubevirt provider
 make build
 mv terraform-provider-kubevirt examples/
@@ -32,6 +35,8 @@ mv terraform-provider-kubevirt examples/
 ## Execute test
 cd examples/
 terraform init
-terraform plan
-terraform apply -auto-approve
-terraform plan
+terraform plan -var minikube_ip=$(minikube ip)
+terraform apply -auto-approve -var minikube_ip=$(minikube ip)
+terraform plan -var minikube_ip=$(minikube ip)
+echo $(sshpass -p 'gocubsgo' ssh cirros@$(minikube ip) -p 30000 -vvvv 'cat /tmp/test')
+terraform destroy -var minikube_ip=$(minikube ip) -auto-approve

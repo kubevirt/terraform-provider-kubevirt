@@ -76,6 +76,15 @@ func vmiResource(meta *interface{}) kubernetes.NamespaceableResourceInterface {
 	})
 }
 
+func dvResource(meta *interface{}) kubernetes.NamespaceableResourceInterface {
+	client := (*meta).(kubernetes.Interface)
+	return client.Resource(k8s_schema.GroupVersionResource{
+		Group:    "cdi.kubevirt.io",
+		Version:  "v1alpha1",
+		Resource: "datavolume",
+	})
+}
+
 func resourceKubevirtVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
 	// Manage either VM or VMI based on ephemeral parameter:
 	conn := vmResource(&meta)
@@ -88,15 +97,16 @@ func resourceKubevirtVirtualMachineCreate(d *schema.ResourceData, meta interface
 	metadata := d.Get("metadata").([]interface{})[0].(map[string]interface{})
 	vmdefinition["kind"] = "VirtualMachine"
 	vmdefinition["apiVersion"] = "kubevirt.io/v1alpha3"
-	vmdefinition["metadata"] = map[string]string{
-		"name": metadata["name"].(string),
+	vmdefinition["metadata"] = map[string]interface{}{
+		"name":   metadata["name"].(string),
+		"labels": metadata["labels"].(map[string]interface{}),
 	}
 	vmdefinition["spec"], _ = expandVirtualMachineSpec(d.Get("spec").([]interface{}), metadata)
 	vm := &unstructured.Unstructured{
 		Object: vmdefinition,
 	}
 
-	log.Printf("[INFO] Creating new virtual machine: %#v", vm)
+	log.Printf("[INFO] Creating new virtual machine: %#v", vm.Object["spec"])
 	out, err := conn.Namespace("default").Create(vm, meta_v1.CreateOptions{})
 	if err != nil {
 		return err
@@ -108,13 +118,41 @@ func resourceKubevirtVirtualMachineCreate(d *schema.ResourceData, meta interface
 
 	running := d.Get("spec").([]interface{})[0].(map[string]interface{})["running"].(bool)
 	if d.Get("wait").(bool) && running {
+		dvs := d.Get("spec").([]interface{})[0].(map[string]interface{})["datavolumes"].([]interface{})
+		if len(dvs) > 0 {
+			for _, dv := range dvs {
+				dvname := dv.(map[string]interface{})["name"].(string)
+				dvcon := dvResource(&meta)
+				stateConf := &resource.StateChangeConf{
+					Target:         []string{"Succeeded"},
+					Pending:        []string{"ImportInProgress", ""},
+					Timeout:        d.Timeout(schema.TimeoutCreate),
+					Delay:          2 * time.Second,
+					NotFoundChecks: 4,
+					Refresh: func() (interface{}, string, error) {
+						dv, err := dvcon.Namespace("default").Get(dvname, meta_v1.GetOptions{})
+						if err != nil {
+							return dv, "", nil
+						}
+
+						statusPhase := fmt.Sprintf("%v", vm.Object["status"].(map[string]interface{})["phase"])
+						return dv, statusPhase, nil
+					},
+				}
+				_, err = stateConf.WaitForState()
+				if err != nil {
+					return fmt.Errorf("%s", err)
+				}
+			}
+		}
+
 		connvmi := vmiResource(&meta)
 		stateConf := &resource.StateChangeConf{
 			Target:         []string{"Running"},
 			Pending:        []string{"Pending", "Scheduling", "Scheduled"},
 			Timeout:        d.Timeout(schema.TimeoutCreate),
-			Delay:          2 * time.Second,
-			NotFoundChecks: 2,
+			Delay:          5 * time.Second,
+			NotFoundChecks: 3,
 			Refresh: func() (interface{}, string, error) {
 				vm, err := connvmi.Namespace("default").Get(name, meta_v1.GetOptions{})
 				if err != nil {

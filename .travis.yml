@@ -26,6 +26,11 @@ jobs:
     - stage: Tests
       name: "Default (minikube with latest k8s)"
 
+addons:
+  apt:
+    packages:
+    - sshpass
+
 cache:
   - directories:
     - cache

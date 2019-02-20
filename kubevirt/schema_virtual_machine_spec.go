@@ -7,6 +7,59 @@ import (
 
 func virtualMachineSpecFields() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"datavolumes": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Virtual machine datavolumes specification.",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "Name of disk",
+					},
+					// TODO: re-think design of the source:
+					"source": {
+						Type:        schema.TypeList,
+						Description: "Volume source",
+						Optional:    true,
+						MaxItems:    1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"http": {
+									Type:        schema.TypeMap,
+									Optional:    true,
+									Description: "Http source of the volume",
+								},
+							},
+						},
+					},
+					"pvc": {
+						Type:        schema.TypeList,
+						Description: "PVC for the datavolmue",
+						Optional:    true,
+						MaxItems:    1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"accessmodes": {
+									Type:        schema.TypeList,
+									Optional:    true,
+									Description: "Access modes of the PVC",
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+									},
+								},
+								"storage": {
+									Type:        schema.TypeString,
+									Optional:    true,
+									Description: "Storage of PVC",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 		"interface": {
 			Type:        schema.TypeList,
 			Optional:    true,
@@ -121,7 +174,7 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 						Optional:    true,
 						Description: "Number of CPU sockets",
 					},
-					"threds": {
+					"threads": {
 						Type:        schema.TypeInt,
 						Optional:    true,
 						Description: "Number of CPU threds",
