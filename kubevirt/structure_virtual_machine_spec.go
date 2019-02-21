@@ -319,7 +319,8 @@ func patchVirtualMachineSpec(pathPrefix, prefix string, d *schema.ResourceData) 
 	}
 
 	if d.HasChange(prefix + "memory") {
-		v := d.Get(prefix + "memory").(string)
+		memory := d.Get(prefix + "memory").([]interface{})[0].(map[string]interface{})
+		v := memory["request"].(string)
 		ops = append(ops, &ReplaceOperation{
 			Path:  pathPrefix + "/template/spec/domain/resources/requests/memory",
 			Value: v,

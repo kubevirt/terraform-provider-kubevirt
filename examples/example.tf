@@ -25,7 +25,7 @@ resource "kubevirt_virtual_machine" "myvm" {
         bus = "virtio"
       }
       volume {
-        image = "kubevirt/cirros-registry-disk-demo"
+        image = "kubevirt/cirros-container-disk-demo"
       }
     }
 
@@ -52,17 +52,5 @@ resource "kubernetes_service" "myvmservice" {
     }
 
     type = "NodePort"
-  }
-
-  provisioner "file" {
-    content = "Test\n"
-    destination = "/tmp/test"
-    connection {
-      type     = "ssh"
-      user     = "cirros"
-      password = "gocubsgo"
-      port     = 30000
-      host     = "${var.minikube_ip}"
-    }
   }
 }

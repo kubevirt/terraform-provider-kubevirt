@@ -249,7 +249,7 @@ func resourceKubevirtVirtualMachineDelete(d *schema.ResourceData, meta interface
 		if d.Get("wait").(bool) {
 			connvmi := vmiResource(&meta)
 			stateConf := &resource.StateChangeConf{
-				Pending: []string{"Running", "Succeeded"},
+				Pending: []string{"Running", "Succeeded", "Failed"},
 				Timeout: d.Timeout(schema.TimeoutCreate),
 				Refresh: func() (interface{}, string, error) {
 					vm, err := connvmi.Namespace("default").Get(name, meta_v1.GetOptions{})
