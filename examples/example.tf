@@ -1,56 +1,31 @@
 provider "kubevirt" {
-
 }
-provider "kubernetes" {
-
-}
-
-variable "minikube_ip" {}
 
 resource "kubevirt_virtual_machine" "myvm" {
-  metadata {
-    name = "myvm"
-    labels {
-      vm = "myvm"
-    }
+  name = "myvm"
+  namespace = "default"
+  labels {
+    label = "mylabel"
   }
-
   wait = true
-  spec {
-    running = true
-
-    disks {
-      name = "mydisk",
-      disk {
-        bus = "virtio"
-      }
-      volume {
-        image = "kubevirt/cirros-container-disk-demo"
-      }
-    }
-
-    memory {
-      request = "64Mi"
-    }
+  running = true
+  image = {
+    url = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+    // url = "http://download.cirros-cloud.net/0.3.6/cirros-0.3.6-x86_64-disk.img"
   }
-}
-
-resource "kubernetes_service" "myvmservice" {
-  metadata {
-    name = "myvmservice"
+  memory {
+    requests = "64M"
+    limits = "256M"
   }
-  spec {
-    selector {
-      vm = "${kubevirt_virtual_machine.myvm.metadata.0.labels.vm}"
-    }
-    session_affinity = "ClientIP"
-    port {
-      name = "ssh"
-      node_port = 30000
-      port = 27017
-      target_port = 22
-    }
-
-    type = "NodePort"
+  cpu {
+    requests = "100m"
+    limits = "200m"
+    cores = 1
+    threads = 2
+  }
+  interfaces {
+    name = "nic1"
+    type = "bridge"
+    network = "pod"
   }
 }
