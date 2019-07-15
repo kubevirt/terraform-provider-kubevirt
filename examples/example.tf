@@ -28,4 +28,9 @@ resource "kubevirt_virtual_machine" "myvm" {
     type = "bridge"
     network = "pod"
   }
+  cloud_init = <<-EOF
+  #cloud-config
+  password: fedora
+  chpasswd: { expire: False }
+  EOF
 }

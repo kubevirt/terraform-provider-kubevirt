@@ -14,7 +14,7 @@ func expandVirtualMachineSpec(d *schema.ResourceData) (*map[string]interface{}, 
 	obj := make(map[string]interface{})
 	labels := d.Get("labels").(map[string]interface{})
 	annotations := d.Get("annotations").(map[string]interface{})
-	cloudInit := d.Get("cloud_init").(map[string]interface{})
+	cloudInit := d.Get("cloud_init").(string)
 	name := d.Get("name").(string)
 	image := d.Get("image").(interface{})
 	memory := d.Get("memory").([]interface{})
@@ -44,7 +44,7 @@ func expandVirtualMachineSpec(d *schema.ResourceData) (*map[string]interface{}, 
 	return &obj, nil
 }
 
-func expandVolumes(vmName string, image interface{}, cloudInit interface{}) []map[string]interface{} {
+func expandVolumes(vmName string, image interface{}, cloudInit string) []map[string]interface{} {
 	volumes := make([]map[string]interface{}, 0)
 
 	// Append qcow image volume:
@@ -61,12 +61,14 @@ func expandVolumes(vmName string, image interface{}, cloudInit interface{}) []ma
 	}
 
 	// Append cloud-init volume:
-	if len(cloudInit.(map[string]interface{})) > 0 {
+	if cloudInit != "" {
 		volumes = append(
 			volumes,
 			map[string]interface{}{
-				"cloudInitNoCloud": cloudInit.(map[string]interface{}),
-				"name":             CloudInitDiskName,
+				"cloudInitNoCloud": map[string]string{
+					"userData": cloudInit,
+				},
+				"name": CloudInitDiskName,
 			},
 		)
 	}
@@ -74,7 +76,7 @@ func expandVolumes(vmName string, image interface{}, cloudInit interface{}) []ma
 	return volumes
 }
 
-func expandDevices(vmName string, image interface{}, cloudInit interface{}, interfaces []interface{}) map[string]interface{} {
+func expandDevices(vmName string, image interface{}, cloudInit string, interfaces []interface{}) map[string]interface{} {
 	devices := make(map[string]interface{})
 	disks := make([]map[string]interface{}, 0)
 
@@ -92,7 +94,7 @@ func expandDevices(vmName string, image interface{}, cloudInit interface{}, inte
 	}
 
 	// Append cloud-init disk:
-	if len(cloudInit.(map[string]interface{})) > 0 {
+	if cloudInit != "" {
 		disks = append(
 			disks,
 			map[string]interface{}{
@@ -253,15 +255,16 @@ func expandImage(img interface{}, name string) []map[string]interface{} {
 	}
 }
 
-func flattenCloudInitSpec(volumes []interface{}) map[string]interface{} {
+func flattenCloudInitSpec(volumes []interface{}) string {
 	for _, v := range volumes {
 		diskName := v.(map[string]interface{})["name"].(string)
 		if diskName == CloudInitDiskName {
-			return v.(map[string]interface{})["cloudInitNoCloud"].(map[string]interface{})
+			cloudInitNoCloud := v.(map[string]interface{})["cloudInitNoCloud"].(map[string]interface{})
+			return cloudInitNoCloud["userData"].(string)
 		}
 	}
 
-	return nil
+	return ""
 }
 
 func flattenVMInterfacesSpec(interfaces, networks []interface{}) []map[string]interface{} {

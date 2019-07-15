@@ -172,7 +172,7 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 			Description: "The qcow image to be imported as data disk of the virtual machine.",
 		},
 		"cloud_init": {
-			Type:     schema.TypeMap,
+			Type:     schema.TypeString,
 			Optional: true,
 			Description: `Represents a cloud-init NoCloud user-data source. The NoCloud data will be added
 						  as a disk to the virtual machine. A proper cloud-init installation is required inside the guest.
