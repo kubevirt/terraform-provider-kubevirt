@@ -271,11 +271,27 @@ func flattenVMInterfacesSpec(interfaces, networks []interface{}) []map[string]in
 	flatten := make([]map[string]interface{}, len(interfaces))
 	for index, iface := range interfaces {
 		iface := iface.(map[string]interface{})
+
 		flatten[index] = make(map[string]interface{})
 		flatten[index]["name"] = iface["name"]
-		flatten[index]["type"] = iface["type"]
-		flatten[index]["network"] = iface["network"]
+		flatten[index]["model"] = iface["model"]
+		flatten[index]["mac_address"] = iface["macAddress"]
+		flatten[index]["pci_address"] = iface["pciAddress"]
+		flatten[index]["type"] = getKeyFromMap(iface, "bridge", "slirp", "sriov", "masquerade")
+		flatten[index]["network"] = getKeyFromMap(networks[index].(map[string]interface{}), "pod", "multus", "genie")
 	}
 
 	return flatten
+}
+
+func getKeyFromMap(themap map[string]interface{}, keys ...string) string {
+	for k := range themap {
+		for _, v := range keys {
+			if k == v {
+				return k
+			}
+		}
+	}
+
+	return ""
 }

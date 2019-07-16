@@ -10,8 +10,8 @@ resource "kubevirt_virtual_machine" "myvm" {
   wait = true
   running = true
   image = {
-    url = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
-    // url = "http://download.cirros-cloud.net/0.3.6/cirros-0.3.6-x86_64-disk.img"
+    // url = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+    url = "http://download.cirros-cloud.net/0.3.6/cirros-0.3.6-x86_64-disk.img"
   }
   memory {
     requests = "64M"
