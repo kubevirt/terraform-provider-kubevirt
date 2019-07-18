@@ -11,7 +11,6 @@ const CloudInitDiskName = "clinitterraform"
 const DatavolumePrefix = "dvvolume"
 
 func expandVirtualMachineSpec(d *schema.ResourceData) (*map[string]interface{}, error) {
-	obj := make(map[string]interface{})
 	labels := d.Get("labels").(map[string]interface{})
 	annotations := d.Get("annotations").(map[string]interface{})
 	cloudInit := d.Get("cloud_init").(string)
@@ -21,7 +20,7 @@ func expandVirtualMachineSpec(d *schema.ResourceData) (*map[string]interface{}, 
 	cpu := d.Get("cpu").([]interface{})
 	interfaces := d.Get("interfaces").([]interface{})
 
-	obj = map[string]interface{}{
+	obj := map[string]interface{}{
 		"running":             d.Get("running").(bool),
 		"dataVolumeTemplates": expandImage(image, name),
 		"template": map[string]interface{}{

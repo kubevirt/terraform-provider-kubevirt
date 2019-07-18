@@ -91,34 +91,12 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 					"boot_order": {
 						Type:        schema.TypeInt,
 						Optional:    true,
-						Description: "BootOrder is an integer value. nLower values take precedence. Each interface that has a boot order must have a unique value.",
+						Description: "BootOrder is an integer value. nLower values take precedence. Each device that has a boot order must have a unique value.",
 					},
 					"network": {
 						Type:        schema.TypeString,
 						Required:    true,
 						Description: "Network represents a network type and a resource that should be connected to the vm.",
-						/*
-							MaxItems:    1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"genie": {
-										Type:        schema.TypeMap,
-										Optional:    true,
-										Description: "Secondary network provided using Genie.",
-									},
-									"multus": {
-										Type:        schema.TypeMap,
-										Optional:    true,
-										Description: "Secondary network provided using Multus.",
-									},
-									"pod": {
-										Type:        schema.TypeMap,
-										Optional:    true,
-										Description: "Default Kubernetes network.",
-									},
-								},
-							},
-						*/
 					},
 				},
 			},
@@ -243,7 +221,7 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 					"threads": {
 						Type:        schema.TypeInt,
 						Optional:    true,
-						Description: "Number of CPU threds",
+						Description: "Number of CPU threads",
 					},
 					"requests": {
 						Type:        schema.TypeString,
@@ -258,86 +236,5 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 				},
 			},
 		},
-		/*
-			"datavolumes": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "Virtual machine datavolumes specification.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Name of disk",
-						},
-						// TODO: re-think design of the source:
-						"source": {
-							Type:        schema.TypeList,
-							Description: "Volume source",
-							Optional:    true,
-							MaxItems:    1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"http": {
-										Type:        schema.TypeMap,
-										Optional:    true,
-										Description: "Http source of the volume",
-									},
-								},
-							},
-						},
-						"pvc": {
-							Type:        schema.TypeList,
-							Description: "PVC for the datavolmue",
-							Optional:    true,
-							MaxItems:    1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"accessmodes": {
-										Type:        schema.TypeList,
-										Optional:    true,
-										Description: "Access modes of the PVC",
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"storage": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Description: "Storage of PVC",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"disks": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "Virtual machine disks specification",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Name of disk",
-						},
-						// TODO: Should we change this to TypeList for each disk type?
-						"disk": {
-							Type:        schema.TypeMap,
-							Optional:    true,
-							Description: "Disk type",
-						},
-						// TODO: Should we change this to TypeList for each volume type?
-						"volume": {
-							Type:        schema.TypeMap,
-							Optional:    true,
-							Description: "Volume specification",
-						},
-					},
-				},
-			},
-		*/
 	}
 }
