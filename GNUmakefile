@@ -6,8 +6,19 @@ PKG_NAME=kubevirt
 default: build
 
 build: fmtcheck
-	go install
 	go build
+
+install: GOOS=$(shell go env GOOS)
+install: GOARCH=$(shell go env GOARCH)
+ifeq ($(OS),Windows_NT)  # is Windows_NT on XP, 2000, 7, Vista, 10...
+install: DESTINATION=$(APPDATA)/terraform.d/plugins/$(GOOS)_$(GOARCH)
+else
+install: DESTINATION=$(HOME)/.terraform.d/plugins/$(GOOS)_$(GOARCH)
+endif
+install: build
+	@echo "==> Installing plugin to $(DESTINATION)"
+	@mkdir -p $(DESTINATION)
+	@cp ./terraform-provider-kubevirt $(DESTINATION)
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1
