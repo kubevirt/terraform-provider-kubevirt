@@ -1,6 +1,7 @@
 package kubevirt
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -81,7 +82,7 @@ func resourceKubevirtVirtualMachineCreate(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[INFO] Creating new virtual machine: %#v", vm.Object["spec"])
-	out, err := conn.Namespace(namespace).Create(vm, meta_v1.CreateOptions{})
+	out, err := conn.Namespace(namespace).Create(context.Background(), vm, meta_v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -100,7 +101,7 @@ func resourceKubevirtVirtualMachineCreate(d *schema.ResourceData, meta interface
 			Delay:          5 * time.Second,
 			NotFoundChecks: 3,
 			Refresh: func() (interface{}, string, error) {
-				vm, err := connvmi.Namespace(namespace).Get(name, meta_v1.GetOptions{})
+				vm, err := connvmi.Namespace(namespace).Get(context.Background(), name, meta_v1.GetOptions{})
 				if err != nil {
 					return vm, "", nil
 				}
@@ -132,7 +133,7 @@ func resourceKubevirtVirtualMachineRead(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[INFO] Reading virtual machine %s", name)
 
-	vm, err := conn.Namespace(namespace).Get(name, meta_v1.GetOptions{})
+	vm, err := conn.Namespace(namespace).Get(context.Background(), name, meta_v1.GetOptions{})
 	if err != nil {
 		log.Printf("[DEBUG] Received error: %#v", err)
 		return err
@@ -274,7 +275,7 @@ func resourceKubevirtVirtualMachineUpdate(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[INFO] Updating virtual machine %s: %s", d.Id(), ops)
-	out, err := conn.Namespace(namespace).Patch(d.Id(), pkgApi.JSONPatchType, data, meta_v1.UpdateOptions{})
+	out, err := conn.Namespace(namespace).Patch(context.Background(), d.Id(), pkgApi.JSONPatchType, data, meta_v1.PatchOptions{})
 	if err != nil {
 		log.Printf("[ERROR] Error updating virtual machine: %#v", err)
 		return err
@@ -297,9 +298,9 @@ func resourceKubevirtVirtualMachineDelete(d *schema.ResourceData, meta interface
 	log.Printf("[INFO] Deleting virtual machine: %#v", name)
 	var err error
 	if ephemeral {
-		err = vmiResource.Namespace(namespace).Delete(name, &meta_v1.DeleteOptions{})
+		err = vmiResource.Namespace(namespace).Delete(context.Background(), name, meta_v1.DeleteOptions{})
 	} else {
-		err = vmResource.Namespace(namespace).Delete(name, &meta_v1.DeleteOptions{})
+		err = vmResource.Namespace(namespace).Delete(context.Background(), name, meta_v1.DeleteOptions{})
 	}
 	if err != nil {
 		return err
@@ -311,7 +312,7 @@ func resourceKubevirtVirtualMachineDelete(d *schema.ResourceData, meta interface
 			Pending: []string{"Deleting"},
 			Timeout: d.Timeout(schema.TimeoutCreate),
 			Refresh: func() (interface{}, string, error) {
-				vm, err := vmiResource.Namespace(namespace).Get(name, meta_v1.GetOptions{})
+				vm, err := vmiResource.Namespace(namespace).Get(context.Background(), name, meta_v1.GetOptions{})
 				if err != nil {
 					if errors.IsNotFound(err) {
 						return nil, "", nil
@@ -333,7 +334,7 @@ func resourceKubevirtVirtualMachineDelete(d *schema.ResourceData, meta interface
 				Pending: []string{"Deleting"},
 				Timeout: d.Timeout(schema.TimeoutCreate),
 				Refresh: func() (interface{}, string, error) {
-					vm, err := vmResource.Namespace(namespace).Get(name, meta_v1.GetOptions{})
+					vm, err := vmResource.Namespace(namespace).Get(context.Background(), name, meta_v1.GetOptions{})
 					if err != nil {
 						if errors.IsNotFound(err) {
 							return nil, "", nil
@@ -370,7 +371,7 @@ func resourceKubevirtVirtualMachineExists(d *schema.ResourceData, meta interface
 	name := d.Id()
 	log.Printf("[INFO] Checking virtual machine %s", name)
 	d.Get("")
-	_, err := conn.Namespace(namespace).Get(name, meta_v1.GetOptions{})
+	_, err := conn.Namespace(namespace).Get(context.Background(), name, meta_v1.GetOptions{})
 	if err != nil {
 		if statusErr, ok := err.(*errors.StatusError); ok && statusErr.ErrStatus.Code == 404 {
 			return false, nil
