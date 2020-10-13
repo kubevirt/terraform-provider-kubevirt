@@ -15,17 +15,17 @@
 
 ## Building The Provider
 
-Clone repository to: `$GOPATH/src/github.com/machacekondra/terraform-provider-kubevirt`
+Clone repository to: `$GOPATH/src/github.com/kubevirt/terraform-provider-kubevirt`
 
 ```sh
-$ mkdir -p $GOPATH/src/github.com/machacekondra; cd $GOPATH/src/github.com/machacekondra
-$ git clone git@github.com:machacekondra/terraform-provider-kubevirt
+$ mkdir -p $GOPATH/src/github.com/kubevirt; cd $GOPATH/src/github.com/machacekondra
+$ git clone git@github.com:kubevirt/terraform-provider-kubevirt
 ```
 
 Enter the provider directory and build the provider
 
 ```sh
-$ cd $GOPATH/src/github.com/machacekondra/terraform-provider-kubevirt
+$ cd $GOPATH/src/github.com/kubevirt/terraform-provider-kubevirt
 $ make build
 ```
 
