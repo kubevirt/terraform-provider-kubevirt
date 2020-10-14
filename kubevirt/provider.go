@@ -8,8 +8,9 @@ import (
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/client"
+	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/virtualmachine"
 	"github.com/mitchellh/go-homedir"
-	kubernetes "k8s.io/client-go/dynamic"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -103,7 +104,7 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"kubevirt_virtual_machine": resourceKubevirtVirtualMachine(),
+			"kubevirt_virtual_machine": virtualmachine.ResourceKubevirtVirtualMachine(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
@@ -153,12 +154,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		cfg.BearerToken = v.(string)
 	}
 
-	k, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to configure: %s", err)
-	}
-
-	return k, nil
+	return client.NewClient(cfg)
 }
 
 func tryLoadingConfigFile(d *schema.ResourceData) (*restclient.Config, error) {
