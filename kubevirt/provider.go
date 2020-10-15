@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/client"
+	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/datavolume"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/virtualmachine"
 	"github.com/mitchellh/go-homedir"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -105,6 +106,7 @@ func Provider() terraform.ResourceProvider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"kubevirt_virtual_machine": virtualmachine.ResourceKubevirtVirtualMachine(),
+			"kubevirt_data_volume":     datavolume.ResourceKubevirtDataVolume(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

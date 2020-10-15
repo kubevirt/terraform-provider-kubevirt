@@ -1,10 +1,10 @@
-package virtualmachine
+package datavolume
 
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func virtualMachineSpecFields() map[string]*schema.Schema {
+func dataVolumeSpecFields() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"wait": {
 			Type:        schema.TypeBool,
@@ -35,13 +35,8 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 			Required:    true,
 			Description: "",
 		},
-		"memory": {
+		"access_mode": {
 			Type:        schema.TypeString,
-			Required:    true,
-			Description: "",
-		},
-		"cpu": {
-			Type:        schema.TypeInt,
 			Required:    true,
 			Description: "",
 		},
@@ -50,27 +45,7 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 			Required:    true,
 			Description: "",
 		},
-		"network_name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "",
-		},
-		"pvc_name": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "",
-		},
 		"image_url": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "",
-		},
-		"access_mode": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "",
-		},
-		"ignition_secret_name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "",

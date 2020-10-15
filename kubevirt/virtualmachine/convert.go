@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/utils"
 	corev1 "k8s.io/api/core/v1"
 	apiresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,14 +40,6 @@ func updateResourceDataFromVirtualMachine(d *schema.ResourceData, vm *kubevirtap
 	return nil
 }
 
-func convertMap(src map[string]interface{}) map[string]string {
-	result := map[string]string{}
-	for k, v := range src {
-		result[k] = v.(string)
-	}
-	return result
-}
-
 func virtualMachineFromResourceData(d *schema.ResourceData) (*kubevirtapiv1.VirtualMachine, error) {
 	// ResourceData Input
 	name := d.Get("name").(string)
@@ -75,7 +68,7 @@ func virtualMachineFromResourceData(d *schema.ResourceData) (*kubevirtapiv1.Virt
 	virtualMachine.ObjectMeta = metav1.ObjectMeta{
 		Name:            name,
 		Namespace:       namespace,
-		Labels:          convertMap(labels),
+		Labels:          utils.ConvertMap(labels),
 		OwnerReferences: nil,
 	}
 
@@ -190,6 +183,7 @@ func volumeTemplateFromResourceData(d *schema.ResourceData) *cdiv1.DataVolume {
 	storageSize := d.Get("storage_size").(string)
 	storageClassName := d.Get("storage_class_name").(string)
 	pvcName := d.Get("pvc_name").(string)
+	imageUrl := d.Get("image_url").(string)
 
 	persistentVolumeClaimSpec := corev1.PersistentVolumeClaimSpec{
 		AccessModes: []corev1.PersistentVolumeAccessMode{
@@ -206,20 +200,28 @@ func volumeTemplateFromResourceData(d *schema.ResourceData) *cdiv1.DataVolume {
 		persistentVolumeClaimSpec.StorageClassName = &storageClassName
 	}
 
+	dataVolumeSpec := cdiv1.DataVolumeSpec{
+		Source: cdiv1.DataVolumeSource{},
+		PVC:    &persistentVolumeClaimSpec,
+	}
+	if pvcName != "" {
+		dataVolumeSpec.Source.PVC = &cdiv1.DataVolumeSourcePVC{
+			Name:      pvcName,
+			Namespace: namespace,
+		}
+
+	}
+	if imageUrl != "" {
+		dataVolumeSpec.Source.HTTP = &cdiv1.DataVolumeSourceHTTP{
+			URL: imageUrl,
+		}
+	}
 	return &cdiv1.DataVolume{
 		TypeMeta: metav1.TypeMeta{APIVersion: cdiv1.SchemeGroupVersion.String()},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-bootvolume", name),
 			Namespace: namespace,
 		},
-		Spec: cdiv1.DataVolumeSpec{
-			Source: cdiv1.DataVolumeSource{
-				PVC: &cdiv1.DataVolumeSourcePVC{
-					Name:      pvcName,
-					Namespace: namespace,
-				},
-			},
-			PVC: &persistentVolumeClaimSpec,
-		},
+		Spec: dataVolumeSpec,
 	}
 }
