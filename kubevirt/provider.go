@@ -6,8 +6,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/client"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/datavolume"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/virtualmachine"
@@ -19,7 +19,7 @@ import (
 )
 
 func Provider() terraform.ResourceProvider {
-	return &schema.Provider{
+	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"host": {
 				Type:        schema.TypeString,
@@ -108,11 +108,20 @@ func Provider() terraform.ResourceProvider {
 			"kubevirt_virtual_machine": virtualmachine.ResourceKubevirtVirtualMachine(),
 			"kubevirt_data_volume":     datavolume.ResourceKubevirtDataVolume(),
 		},
-		ConfigureFunc: providerConfigure,
 	}
+	p.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
+		terraformVersion := p.TerraformVersion
+		if terraformVersion == "" {
+			// Terraform 0.12 introduced this field to the protocol
+			// We can therefore assume that if it's missing it's 0.10 or 0.11
+			terraformVersion = "0.11+compatible"
+		}
+		return providerConfigure(d, terraformVersion)
+	}
+	return p
 }
 
-func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
 
 	var cfg *restclient.Config
 	var err error
@@ -129,7 +138,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	// Overriding with static configuration
-	cfg.UserAgent = fmt.Sprintf("HashiCorp/1.0 Terraform/%s", terraform.VersionString())
+	cfg.UserAgent = fmt.Sprintf("HashiCorp/1.0 Terraform/%s", terraformVersion)
 
 	if v, ok := d.GetOk("host"); ok {
 		cfg.Host = v.(string)

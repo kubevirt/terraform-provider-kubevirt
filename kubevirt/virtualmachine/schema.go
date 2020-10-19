@@ -1,7 +1,7 @@
 package virtualmachine
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func virtualMachineSpecFields() map[string]*schema.Schema {
