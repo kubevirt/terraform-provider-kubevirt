@@ -30,6 +30,7 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Define the labels of the virtual machine.",
 		},
+		// Spec:
 		"storage_size": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -74,6 +75,16 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "",
+		},
+		"anti_affinity_match_labels": {
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Description: "Define the labels of the pods that will apply the anti affinity rules.",
+		},
+		"anti_affinity_topology_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The label on the nodes that defines nodes group for anti affinity rules.",
 		},
 	}
 }

@@ -2,10 +2,10 @@ package virtualmachine
 
 import (
 	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/utils"
 	corev1 "k8s.io/api/core/v1"
+	k8sv1 "k8s.io/api/core/v1"
 	apiresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubevirtapiv1 "kubevirt.io/client-go/api/v1"
@@ -82,6 +82,8 @@ func vmiTemplateFromResourceData(d *schema.ResourceData) (*kubevirtapiv1.Virtual
 	networkName := d.Get("network_name").(string)
 	memory := d.Get("memory").(string)
 	cpu := d.Get("cpu").(int)
+	antiAffinityTopologyKey := d.Get("anti_affinity_topology_key").(string)
+	antiAffinityMatchLabels := d.Get("anti_affinity_match_labels").(map[string]interface{})
 
 	template := &kubevirtapiv1.VirtualMachineInstanceTemplateSpec{}
 
@@ -170,6 +172,24 @@ func vmiTemplateFromResourceData(d *schema.ResourceData) (*kubevirtapiv1.Virtual
 				},
 			},
 		},
+	}
+
+	if len(antiAffinityTopologyKey) > 0 {
+		template.Spec.Affinity = &k8sv1.Affinity{
+			PodAntiAffinity: &k8sv1.PodAntiAffinity{
+				PreferredDuringSchedulingIgnoredDuringExecution: []k8sv1.WeightedPodAffinityTerm{
+					{
+						Weight: 100,
+						PodAffinityTerm: k8sv1.PodAffinityTerm{
+							TopologyKey: antiAffinityTopologyKey,
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: utils.ConvertMap(antiAffinityMatchLabels),
+							},
+						},
+					},
+				},
+			},
+		}
 	}
 
 	return template, nil
