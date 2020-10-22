@@ -2,6 +2,7 @@ package virtualmachine
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -14,7 +15,6 @@ import (
 
 const (
 	mainNetworkName = "main"
-	podNetworkName  = "pod-network"
 	defaultBus      = "virtio"
 )
 
@@ -122,12 +122,6 @@ func vmiTemplateFromResourceData(d *schema.ResourceData) (*kubevirtapiv1.Virtual
 				},
 			},
 		},
-		{
-			Name: podNetworkName,
-			NetworkSource: kubevirtapiv1.NetworkSource{
-				Pod: &kubevirtapiv1.PodNetwork{},
-			},
-		},
 	}
 
 	template.Spec.Domain = kubevirtapiv1.DomainSpec{}
@@ -163,12 +157,6 @@ func vmiTemplateFromResourceData(d *schema.ResourceData) (*kubevirtapiv1.Virtual
 				Name: mainNetworkName,
 				InterfaceBindingMethod: kubevirtapiv1.InterfaceBindingMethod{
 					Bridge: &kubevirtapiv1.InterfaceBridge{},
-				},
-			},
-			{
-				Name: podNetworkName,
-				InterfaceBindingMethod: kubevirtapiv1.InterfaceBindingMethod{
-					Masquerade: &kubevirtapiv1.InterfaceMasquerade{},
 				},
 			},
 		},
