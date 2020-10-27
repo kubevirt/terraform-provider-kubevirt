@@ -79,6 +79,7 @@ func vmiTemplateFromResourceData(d *schema.ResourceData) (*kubevirtapiv1.Virtual
 	// ResourceData Input
 	name := d.Get("name").(string)
 	ignitionSecretName := d.Get("ignition_secret_name").(string)
+	serviceAccountName := d.Get("service_account_name").(string)
 	networkName := d.Get("network_name").(string)
 	memory := d.Get("memory").(string)
 	cpu := d.Get("cpu").(int)
@@ -108,6 +109,14 @@ func vmiTemplateFromResourceData(d *schema.ResourceData) (*kubevirtapiv1.Virtual
 					UserDataSecretRef: &corev1.LocalObjectReference{
 						Name: ignitionSecretName,
 					},
+				},
+			},
+		},
+		{
+			Name: fmt.Sprintf("%s-serviceaccountdisk", name),
+			VolumeSource: kubevirtapiv1.VolumeSource{
+				ServiceAccount: &kubevirtapiv1.ServiceAccountVolumeSource{
+					ServiceAccountName: serviceAccountName,
 				},
 			},
 		},
@@ -145,6 +154,14 @@ func vmiTemplateFromResourceData(d *schema.ResourceData) (*kubevirtapiv1.Virtual
 			},
 			{
 				Name: fmt.Sprintf("%s-cloudinitdisk", name),
+				DiskDevice: kubevirtapiv1.DiskDevice{
+					Disk: &kubevirtapiv1.DiskTarget{
+						Bus: defaultBus,
+					},
+				},
+			},
+			{
+				Name: fmt.Sprintf("%s-serviceaccountdisk", name),
 				DiskDevice: kubevirtapiv1.DiskDevice{
 					Disk: &kubevirtapiv1.DiskTarget{
 						Bus: defaultBus,

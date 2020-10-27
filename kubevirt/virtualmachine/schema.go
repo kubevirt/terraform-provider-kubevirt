@@ -76,6 +76,11 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 			Required:    true,
 			Description: "",
 		},
+		"service_account_name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "",
+		},
 		"anti_affinity_match_labels": {
 			Type:        schema.TypeMap,
 			Optional:    true,
