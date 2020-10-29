@@ -7,3 +7,11 @@ func ConvertMap(src map[string]interface{}) map[string]string {
 	}
 	return result
 }
+
+func ConditionalDefault(condition bool, defaultValue interface{}) interface{} {
+	if !condition {
+		return nil
+	}
+
+	return defaultValue
+}
