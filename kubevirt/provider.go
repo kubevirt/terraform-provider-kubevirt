@@ -9,8 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/client"
-	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/datavolume"
-	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/virtualmachine"
 	"github.com/mitchellh/go-homedir"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	restclient "k8s.io/client-go/rest"
@@ -105,8 +103,8 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"kubevirt_virtual_machine": virtualmachine.ResourceKubevirtVirtualMachine(),
-			"kubevirt_data_volume":     datavolume.ResourceKubevirtDataVolume(),
+			"kubevirt_virtual_machine": resourceKubevirtVirtualMachine(),
+			"kubevirt_data_volume":     resourceKubevirtDataVolume(),
 		},
 	}
 	p.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
