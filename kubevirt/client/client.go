@@ -25,6 +25,7 @@ import (
 	unstructured "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	pkgApi "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 	restclient "k8s.io/client-go/rest"
 	kubevirtapiv1 "kubevirt.io/client-go/api/v1"
@@ -34,11 +35,18 @@ import (
 //go:generate mockgen -source=./client.go -destination=./mock/client_generated.go -package=mock
 
 type Client interface {
-	CreateVirtualMachine(vm kubevirtapiv1.VirtualMachine) error
-	GetVirtualMachine(namespace string, name string) (*kubevirtapiv1.VirtualMachine, error)
+	// VirtualMachine CRUD operations
+
+	CreateVirtualMachine(vm *kubevirtapiv1.VirtualMachine) error
+	ReadVirtualMachine(namespace string, name string) (*kubevirtapiv1.VirtualMachine, error)
+	UpdateVirtualMachine(namespace string, name string, vm *kubevirtapiv1.VirtualMachine, data []byte) error
 	DeleteVirtualMachine(namespace string, name string) error
-	CreateDataVolume(vm cdiv1.DataVolume) error
-	GetDataVolume(namespace string, name string) (*cdiv1.DataVolume, error)
+
+	// DataVolume CRUD operations
+
+	CreateDataVolume(vm *cdiv1.DataVolume) error
+	ReadDataVolume(namespace string, name string) (*cdiv1.DataVolume, error)
+	UpdateDataVolume(namespace string, name string, dv *cdiv1.DataVolume, data []byte) error
 	DeleteDataVolume(namespace string, name string) error
 }
 
@@ -57,22 +65,35 @@ func NewClient(cfg *restclient.Config) (Client, error) {
 	return result, nil
 }
 
-// VirtualMachine
+// VirtualMachine CRUD operations
 
-func (c *client) CreateVirtualMachine(vm kubevirtapiv1.VirtualMachine) error {
-	return c.createResource(&vm, vm.Namespace, vmRes())
+func (c *client) CreateVirtualMachine(vm *kubevirtapiv1.VirtualMachine) error {
+	vmUpdateTypeMeta(vm)
+	return c.createResource(vm, vm.Namespace, vmRes())
 }
 
-func (c *client) GetVirtualMachine(namespace string, name string) (*kubevirtapiv1.VirtualMachine, error) {
+func (c *client) ReadVirtualMachine(namespace string, name string) (*kubevirtapiv1.VirtualMachine, error) {
 	var vm kubevirtapiv1.VirtualMachine
-	if err := c.getResource(namespace, name, vmRes(), &vm); err != nil {
+	if err := c.readResource(namespace, name, vmRes(), &vm); err != nil {
 		return nil, err
 	}
 	return &vm, nil
 }
 
+func (c *client) UpdateVirtualMachine(namespace string, name string, vm *kubevirtapiv1.VirtualMachine, data []byte) error {
+	vmUpdateTypeMeta(vm)
+	return c.updateResource(namespace, name, dvRes(), vm, data)
+}
+
 func (c *client) DeleteVirtualMachine(namespace string, name string) error {
 	return c.deleteResource(namespace, name, vmRes())
+}
+
+func vmUpdateTypeMeta(vm *kubevirtapiv1.VirtualMachine) {
+	vm.TypeMeta = metav1.TypeMeta{
+		Kind:       "VirtualMachine",
+		APIVersion: kubevirtapiv1.GroupVersion.String(),
+	}
 }
 
 func vmRes() schema.GroupVersionResource {
@@ -84,22 +105,35 @@ func vmRes() schema.GroupVersionResource {
 
 }
 
-// DataVolume
+// DataVolume CRUD operations
 
-func (c *client) CreateDataVolume(vm cdiv1.DataVolume) error {
-	return c.createResource(&vm, vm.Namespace, dvRes())
+func (c *client) CreateDataVolume(dv *cdiv1.DataVolume) error {
+	dvUpdateTypeMeta(dv)
+	return c.createResource(dv, dv.Namespace, dvRes())
 }
 
-func (c *client) GetDataVolume(namespace string, name string) (*cdiv1.DataVolume, error) {
+func (c *client) ReadDataVolume(namespace string, name string) (*cdiv1.DataVolume, error) {
 	var dv cdiv1.DataVolume
-	if err := c.getResource(namespace, name, dvRes(), &dv); err != nil {
+	if err := c.readResource(namespace, name, dvRes(), &dv); err != nil {
 		return nil, err
 	}
 	return &dv, nil
 }
 
+func (c *client) UpdateDataVolume(namespace string, name string, dv *cdiv1.DataVolume, data []byte) error {
+	dvUpdateTypeMeta(dv)
+	return c.updateResource(namespace, name, dvRes(), dv, data)
+}
+
 func (c *client) DeleteDataVolume(namespace string, name string) error {
 	return c.deleteResource(namespace, name, dvRes())
+}
+
+func dvUpdateTypeMeta(dv *cdiv1.DataVolume) {
+	dv.TypeMeta = metav1.TypeMeta{
+		Kind:       "DataVolume",
+		APIVersion: cdiv1.SchemeGroupVersion.String(),
+	}
 }
 
 func dvRes() schema.GroupVersionResource {
@@ -110,7 +144,7 @@ func dvRes() schema.GroupVersionResource {
 	}
 }
 
-// Generic Resource
+// Generic Resource CRUD operations
 
 func (c *client) createResource(obj interface{}, namespace string, resource schema.GroupVersionResource) error {
 	resultMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
@@ -127,8 +161,17 @@ func (c *client) createResource(obj interface{}, namespace string, resource sche
 	return runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured, obj)
 }
 
-func (c *client) getResource(namespace string, name string, resource schema.GroupVersionResource, obj interface{}) error {
+func (c *client) readResource(namespace string, name string, resource schema.GroupVersionResource, obj interface{}) error {
 	resp, err := c.dynamicClient.Resource(resource).Namespace(namespace).Get(context.Background(), name, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	unstructured := resp.UnstructuredContent()
+	return runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured, obj)
+}
+
+func (c *client) updateResource(namespace string, name string, resource schema.GroupVersionResource, obj interface{}, data []byte) error {
+	resp, err := c.dynamicClient.Resource(resource).Namespace(namespace).Patch(context.Background(), name, pkgApi.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		return err
 	}
