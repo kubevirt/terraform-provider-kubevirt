@@ -6,6 +6,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.3 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/aws/aws-sdk-go v1.31.9 // indirect
+	github.com/golang/mock v1.4.3
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20191212124732-c6ae6269b9d7 // indirect
 	github.com/hashicorp/terraform-plugin-sdk v1.16.0
