@@ -72,7 +72,7 @@ resource "kubevirt_virtual_machine" "virtual_machine" {
         }
       }
       spec {
-        volumes {
+        volume {
           name = "test-vm-datavolumedisk1"
           volume_source {
             data_volume {
@@ -98,7 +98,7 @@ resource "kubevirt_virtual_machine" "virtual_machine" {
             }
           }
           devices {
-            disks {
+            disk {
               name = "test-vm-datavolumedisk1"
               disk_device {
                 disk {
@@ -106,15 +106,15 @@ resource "kubevirt_virtual_machine" "virtual_machine" {
                 }
               }
             }
-            // {
+            // disk {
             //   name = "test-vm-cloudinitdisk"
             //   disk_device = {
             //     disk = {
             //       bus = "virtio"
             //     }
             //   }
-            // },
-            // disks {
+            // }
+            // disk {
             //   name = kubernetes_service_account.root.metadata[0].name
             //   disk_device {
             //     disk {
@@ -122,13 +122,13 @@ resource "kubevirt_virtual_machine" "virtual_machine" {
             //     }
             //   }
             // }
-            interfaces {
+            interface {
               name                     = "main"
               interface_binding_method = "InterfaceBridge"
             }
           }
         }
-        networks {
+        network {
           name = "main"
           network_source {
             multus {

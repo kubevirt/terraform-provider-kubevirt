@@ -43,7 +43,7 @@ func domainSpecFields() map[string]*schema.Schema {
 			Required:    true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"disks": {
+					"disk": {
 						Type:        schema.TypeList,
 						Description: "Disks describes disks, cdroms, floppy and luns which are connected to the vmi.",
 						Required:    true,
@@ -90,7 +90,7 @@ func domainSpecFields() map[string]*schema.Schema {
 							},
 						},
 					},
-					"interfaces": {
+					"interface": {
 						Type:        schema.TypeList,
 						Description: "Interfaces describe network interfaces which are added to the vmi.",
 						Required:    true,
@@ -203,10 +203,10 @@ func expandDevices(devices []interface{}) (kubevirtapiv1.Devices, error) {
 
 	in := devices[0].(map[string]interface{})
 
-	if v, ok := in["disks"].([]interface{}); ok {
+	if v, ok := in["disk"].([]interface{}); ok {
 		result.Disks = expandDisks(v)
 	}
-	if v, ok := in["interfaces"].([]interface{}); ok {
+	if v, ok := in["interface"].([]interface{}); ok {
 		result.Interfaces = expandInterfaces(v)
 	}
 
@@ -332,8 +332,8 @@ func flattenResources(in kubevirtapiv1.ResourceRequirements) []interface{} {
 func flattenDevices(in kubevirtapiv1.Devices) []interface{} {
 	att := make(map[string]interface{})
 
-	att["disks"] = flattenDisks(in.Disks)
-	att["interfaces"] = flattenInterfaces(in.Interfaces)
+	att["disk"] = flattenDisks(in.Disks)
+	att["interface"] = flattenInterfaces(in.Interfaces)
 
 	return []interface{}{att}
 }

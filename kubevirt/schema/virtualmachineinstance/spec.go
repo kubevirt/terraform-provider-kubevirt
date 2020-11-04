@@ -45,7 +45,7 @@ func virtualMachineInstanceSpecFields() map[string]*schema.Schema {
 			Description: "Grace period observed after signalling a VirtualMachineInstance to stop after which the VirtualMachineInstance is force terminated.",
 			Optional:    true,
 		},
-		"volumes":         volumesSchema(),
+		"volume":          volumesSchema(),
 		"liveness_probe":  probeSchema(),
 		"readiness_probe": probeSchema(),
 		"hostname": {
@@ -58,7 +58,7 @@ func virtualMachineInstanceSpecFields() map[string]*schema.Schema {
 			Description: "If specified, the fully qualified vmi hostname will be \"<hostname>.<subdomain>.<pod namespace>.svc.<cluster domain>\".",
 			Optional:    true,
 		},
-		"networks": networksSchema(),
+		"network": networksSchema(),
 		"dns_policy": {
 			Type:        schema.TypeString,
 			Description: "DNSPolicy defines how a pod's DNS will be configured.",
@@ -134,7 +134,7 @@ func expandVirtualMachineInstanceSpec(virtualMachineInstanceSpec []interface{}) 
 	if v, ok := in["termination_grace_period_seconds"].(int64); ok {
 		result.TerminationGracePeriodSeconds = &v
 	}
-	if v, ok := in["volumes"].([]interface{}); ok {
+	if v, ok := in["volume"].([]interface{}); ok {
 		result.Volumes = expandVolumes(v)
 	}
 	if v, ok := in["liveness_probe"].([]interface{}); ok {
@@ -149,7 +149,7 @@ func expandVirtualMachineInstanceSpec(virtualMachineInstanceSpec []interface{}) 
 	if v, ok := in["subdomain"].(string); ok {
 		result.Subdomain = v
 	}
-	if v, ok := in["networks"].([]interface{}); ok {
+	if v, ok := in["network"].([]interface{}); ok {
 		result.Networks = expandNetworks(v)
 	}
 	if v, ok := in["dns_policy"].(string); ok {
@@ -181,7 +181,7 @@ func flattenVirtualMachineInstanceSpec(in kubevirtapiv1.VirtualMachineInstanceSp
 	if in.TerminationGracePeriodSeconds != nil {
 		att["termination_grace_period_seconds"] = *in.TerminationGracePeriodSeconds
 	}
-	att["volumes"] = flattenVolumes(in.Volumes)
+	att["volume"] = flattenVolumes(in.Volumes)
 	if in.LivenessProbe != nil {
 		att["liveness_probe"] = flattenProbe(*in.LivenessProbe)
 	}
@@ -190,7 +190,7 @@ func flattenVirtualMachineInstanceSpec(in kubevirtapiv1.VirtualMachineInstanceSp
 	}
 	att["hostname"] = in.Hostname
 	att["subdomain"] = in.Subdomain
-	att["networks"] = flattenNetworks(in.Networks)
+	att["network"] = flattenNetworks(in.Networks)
 	att["dns_policy"] = string(in.DNSPolicy)
 	if in.DNSConfig != nil {
 		att["pod_dns_config"] = k8s.FlattenPodDNSConfig(in.DNSConfig)
