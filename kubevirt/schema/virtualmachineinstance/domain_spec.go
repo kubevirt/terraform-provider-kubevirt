@@ -87,6 +87,11 @@ func domainSpecFields() map[string]*schema.Schema {
 										},
 									},
 								},
+								"serial": {
+									Type:        schema.TypeString,
+									Description: "Serial provides the ability to specify a serial number for the disk device.",
+									Optional:    true,
+								},
 							},
 						},
 					},
@@ -229,6 +234,9 @@ func expandDisks(disks []interface{}) []kubevirtapiv1.Disk {
 		if v, ok := in["disk_device"].([]interface{}); ok {
 			result[i].DiskDevice = expandDiskDevice(v)
 		}
+		if v, ok := in["serial"].(string); ok {
+			result[i].Serial = v
+		}
 	}
 
 	return result
@@ -346,6 +354,7 @@ func flattenDisks(in []kubevirtapiv1.Disk) []interface{} {
 
 		c["name"] = v.Name
 		c["disk_device"] = flattenDiskDevice(v.DiskDevice)
+		c["serial"] = v.Serial
 
 		att[i] = c
 	}
