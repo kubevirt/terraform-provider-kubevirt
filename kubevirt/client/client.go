@@ -19,7 +19,9 @@ package client
 import (
 	"context"
 	"fmt"
+	"log"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	unstructured "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -59,7 +61,9 @@ func NewClient(cfg *restclient.Config) (Client, error) {
 	result := &client{}
 	c, err := dynamic.NewForConfig(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to configure: %s", err)
+		msg := fmt.Sprintf("Failed to create client, with error: %v", err)
+		log.Printf("[Error] %s", msg)
+		return nil, fmt.Errorf(msg)
 	}
 	result.dynamicClient = c
 	return result, nil
@@ -74,13 +78,21 @@ func (c *client) CreateVirtualMachine(vm *kubevirtapiv1.VirtualMachine) error {
 
 func (c *client) GetVirtualMachine(namespace string, name string) (*kubevirtapiv1.VirtualMachine, error) {
 	var vm kubevirtapiv1.VirtualMachine
-	resp, err := c.getResource(namespace, name, dvRes())
+	resp, err := c.getResource(namespace, name, vmRes())
 	if err != nil {
-		return nil, err
+		if errors.IsNotFound(err) {
+			log.Printf("[Warning] VirtualMachine %s not found (namespace=%s)", name, namespace)
+			return nil, err
+		}
+		msg := fmt.Sprintf("Failed to get VirtualMachine, with error: %v", err)
+		log.Printf("[Error] %s", msg)
+		return nil, fmt.Errorf(msg)
 	}
 	unstructured := resp.UnstructuredContent()
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured, &vm); err != nil {
-		return nil, err
+		msg := fmt.Sprintf("Failed to translate unstructed to VirtualMachine, with error: %v", err)
+		log.Printf("[Error] %s", msg)
+		return nil, fmt.Errorf(msg)
 	}
 	return &vm, nil
 }
@@ -121,11 +133,19 @@ func (c *client) GetDataVolume(namespace string, name string) (*cdiv1.DataVolume
 	var dv cdiv1.DataVolume
 	resp, err := c.getResource(namespace, name, dvRes())
 	if err != nil {
-		return nil, err
+		if errors.IsNotFound(err) {
+			log.Printf("[Warning] DataVolume %s not found (namespace=%s)", name, namespace)
+			return nil, err
+		}
+		msg := fmt.Sprintf("Failed to get DataVolume, with error: %v", err)
+		log.Printf("[Error] %s", msg)
+		return nil, fmt.Errorf(msg)
 	}
 	unstructured := resp.UnstructuredContent()
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured, &dv); err != nil {
-		return nil, err
+		msg := fmt.Sprintf("Failed to translate Unstructed to VirtualMachine, with error: %v", err)
+		log.Printf("[Error] %s", msg)
+		return nil, fmt.Errorf(msg)
 	}
 	return &dv, nil
 }
@@ -159,13 +179,17 @@ func dvRes() schema.GroupVersionResource {
 func (c *client) createResource(obj interface{}, namespace string, resource schema.GroupVersionResource) error {
 	resultMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
-		return err
+		msg := fmt.Sprintf("Failed to translate %s to Unstructed (for create operation), with error: %v", resource.Resource, err)
+		log.Printf("[Error] %s", msg)
+		return fmt.Errorf(msg)
 	}
 	input := unstructured.Unstructured{}
 	input.SetUnstructuredContent(resultMap)
 	resp, err := c.dynamicClient.Resource(resource).Namespace(namespace).Create(context.Background(), &input, meta_v1.CreateOptions{})
 	if err != nil {
-		return err
+		msg := fmt.Sprintf("Failed to create %s, with error: %v", resource.Resource, err)
+		log.Printf("[Error] %s", msg)
+		return fmt.Errorf(msg)
 	}
 	unstructured := resp.UnstructuredContent()
 	return runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured, obj)
@@ -178,7 +202,9 @@ func (c *client) getResource(namespace string, name string, resource schema.Grou
 func (c *client) updateResource(namespace string, name string, resource schema.GroupVersionResource, obj interface{}, data []byte) error {
 	resp, err := c.dynamicClient.Resource(resource).Namespace(namespace).Patch(context.Background(), name, pkgApi.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
-		return err
+		msg := fmt.Sprintf("Failed to update %s, with error: %v", resource.Resource, err)
+		log.Printf("[Error] %s", msg)
+		return fmt.Errorf(msg)
 	}
 	unstructured := resp.UnstructuredContent()
 	return runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured, obj)
