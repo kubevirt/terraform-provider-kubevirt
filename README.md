@@ -10,46 +10,49 @@
 ## Requirements
 
 
--	[Terraform](https://www.terraform.io/downloads.html) 0.10.x
--	[Go](https://golang.org/doc/install) 1.9 (to build the provider plugin)
+-	[Terraform](https://www.terraform.io/downloads.html) 0.12.x
+-	[Go](https://golang.org/doc/install) 1.14 (to build the provider plugin)
 
 ## Building The Provider
 
-Clone repository to: `$GOPATH/src/github.com/kubevirt/terraform-provider-kubevirt`
+1. Clone repository
+
+2. Change directory to repository root folder
+
+3. Build the project by running `make build`
 
 ```sh
-$ mkdir -p $GOPATH/src/github.com/kubevirt; cd $GOPATH/src/github.com/machacekondra
-$ git clone git@github.com:kubevirt/terraform-provider-kubevirt
-```
-
-Enter the provider directory and build the provider
-
-```sh
-$ cd $GOPATH/src/github.com/kubevirt/terraform-provider-kubevirt
 $ make build
 ```
 
 ## Using the provider
 
-- [ ] Fill in for each provider
+In order to use it in your computer, run install command inside the repository:
 
-## Developing the Provider
+```sh
+$ make install
+```
 
-### Contributing Resources
+You can find examples how to use the provider in [_example directory](https://github.com/nirarg/terraform-provider-kubevirt/tree/master/_examples)
 
-In order to prevent breaking changes and migration of user-created resources, resources included in this provider will be limited to `v1` APIs and not `alpha` or `beta`. You can find `v1` resources in the Kubernetes [API documentation](https://kubernetes.io/docs/reference/#api-reference) for the appropriate version of Kubernetes.
+## Contributing to the Provider
+
+### Code structure
+
+* All code located under [kubevirt directory](https://github.com/nirarg/terraform-provider-kubevirt/tree/master/kubevirt)
+* Backend kubevirt client wrapper located in [client](https://github.com/nirarg/terraform-provider-kubevirt/tree/master/kubevirt/client/client.go)
+* All terraform schema definitions located under [schema directory](https://github.com/nirarg/terraform-provider-kubevirt/tree/master/kubevirt/schema)
+* Terraform resource is defined (operations and schema) in `kubevirt/resource_*.go` for example: virtualmachine resource defined [here](https://github.com/nirarg/terraform-provider-kubevirt/tree/master/kubevirt/resource_virtualmachine.go)
+* The main file, which define the provider's flags and structures is [provider](https://github.com/nirarg/terraform-provider-kubevirt/tree/master/kubevirt/provider.go)
 
 ### Development Environment
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.9+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.14+ is *required*).
 
-To compile the provider, run `make build`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
+To compile the provider, run `make build`. This will build the provider and put the provider binary in the repository root directory.
 
 ```sh
 $ make build
-...
-$ $GOPATH/bin/terraform-provider-kubevirt
-...
 ```
 
 In order to test the provider, you can simply run `make test`.
@@ -58,10 +61,9 @@ In order to test the provider, you can simply run `make test`.
 $ make test
 ```
 
-In order to run the full suite of Acceptance tests, run `make testacc`.
-
-*Note:* Acceptance tests create real resources, and often cost money to run.
+In order to run terraform on your computer with `terraform-provider-kubevirt`, run `make install`
 
 ```sh
-$ make testacc
+$ make install
 ```
+That would build the binary and copy it to `$(HOME)/.terraform.d/plugins/$(GOOS)_$(GOARCH)`
