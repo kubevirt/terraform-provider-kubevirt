@@ -74,7 +74,12 @@ func (c *client) CreateVirtualMachine(vm *kubevirtapiv1.VirtualMachine) error {
 
 func (c *client) GetVirtualMachine(namespace string, name string) (*kubevirtapiv1.VirtualMachine, error) {
 	var vm kubevirtapiv1.VirtualMachine
-	if err := c.getResource(namespace, name, vmRes(), &vm); err != nil {
+	resp, err := c.getResource(namespace, name, dvRes())
+	if err != nil {
+		return nil, err
+	}
+	unstructured := resp.UnstructuredContent()
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured, &vm); err != nil {
 		return nil, err
 	}
 	return &vm, nil
@@ -114,7 +119,12 @@ func (c *client) CreateDataVolume(dv *cdiv1.DataVolume) error {
 
 func (c *client) GetDataVolume(namespace string, name string) (*cdiv1.DataVolume, error) {
 	var dv cdiv1.DataVolume
-	if err := c.getResource(namespace, name, dvRes(), &dv); err != nil {
+	resp, err := c.getResource(namespace, name, dvRes())
+	if err != nil {
+		return nil, err
+	}
+	unstructured := resp.UnstructuredContent()
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured, &dv); err != nil {
 		return nil, err
 	}
 	return &dv, nil
@@ -161,13 +171,8 @@ func (c *client) createResource(obj interface{}, namespace string, resource sche
 	return runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured, obj)
 }
 
-func (c *client) getResource(namespace string, name string, resource schema.GroupVersionResource, obj interface{}) error {
-	resp, err := c.dynamicClient.Resource(resource).Namespace(namespace).Get(context.Background(), name, metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
-	unstructured := resp.UnstructuredContent()
-	return runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured, obj)
+func (c *client) getResource(namespace string, name string, resource schema.GroupVersionResource) (*unstructured.Unstructured, error) {
+	return c.dynamicClient.Resource(resource).Namespace(namespace).Get(context.Background(), name, metav1.GetOptions{})
 }
 
 func (c *client) updateResource(namespace string, name string, resource schema.GroupVersionResource, obj interface{}, data []byte) error {
