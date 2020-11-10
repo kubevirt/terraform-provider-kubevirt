@@ -48,19 +48,19 @@ func (mr *MockClientMockRecorder) CreateVirtualMachine(vm interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateVirtualMachine", reflect.TypeOf((*MockClient)(nil).CreateVirtualMachine), vm)
 }
 
-// ReadVirtualMachine mocks base method
-func (m *MockClient) ReadVirtualMachine(namespace, name string) (*v1.VirtualMachine, error) {
+// GetVirtualMachine mocks base method
+func (m *MockClient) GetVirtualMachine(namespace, name string) (*v1.VirtualMachine, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReadVirtualMachine", namespace, name)
+	ret := m.ctrl.Call(m, "GetVirtualMachine", namespace, name)
 	ret0, _ := ret[0].(*v1.VirtualMachine)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ReadVirtualMachine indicates an expected call of ReadVirtualMachine
-func (mr *MockClientMockRecorder) ReadVirtualMachine(namespace, name interface{}) *gomock.Call {
+// GetVirtualMachine indicates an expected call of GetVirtualMachine
+func (mr *MockClientMockRecorder) GetVirtualMachine(namespace, name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadVirtualMachine", reflect.TypeOf((*MockClient)(nil).ReadVirtualMachine), namespace, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVirtualMachine", reflect.TypeOf((*MockClient)(nil).GetVirtualMachine), namespace, name)
 }
 
 // UpdateVirtualMachine mocks base method
@@ -92,7 +92,7 @@ func (mr *MockClientMockRecorder) DeleteVirtualMachine(namespace, name interface
 }
 
 // CreateDataVolume mocks base method
-func (m *MockClient) CreateDataVolume(vm v1alpha1.DataVolume) error {
+func (m *MockClient) CreateDataVolume(vm *v1alpha1.DataVolume) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateDataVolume", vm)
 	ret0, _ := ret[0].(error)
@@ -105,19 +105,19 @@ func (mr *MockClientMockRecorder) CreateDataVolume(vm interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataVolume", reflect.TypeOf((*MockClient)(nil).CreateDataVolume), vm)
 }
 
-// ReadDataVolume mocks base method
-func (m *MockClient) ReadDataVolume(namespace, name string) (*v1alpha1.DataVolume, error) {
+// GetDataVolume mocks base method
+func (m *MockClient) GetDataVolume(namespace, name string) (*v1alpha1.DataVolume, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReadDataVolume", namespace, name)
+	ret := m.ctrl.Call(m, "GetDataVolume", namespace, name)
 	ret0, _ := ret[0].(*v1alpha1.DataVolume)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ReadDataVolume indicates an expected call of ReadDataVolume
-func (mr *MockClientMockRecorder) ReadDataVolume(namespace, name interface{}) *gomock.Call {
+// GetDataVolume indicates an expected call of GetDataVolume
+func (mr *MockClientMockRecorder) GetDataVolume(namespace, name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadDataVolume", reflect.TypeOf((*MockClient)(nil).ReadDataVolume), namespace, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataVolume", reflect.TypeOf((*MockClient)(nil).GetDataVolume), namespace, name)
 }
 
 // UpdateDataVolume mocks base method

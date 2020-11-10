@@ -38,14 +38,14 @@ type Client interface {
 	// VirtualMachine CRUD operations
 
 	CreateVirtualMachine(vm *kubevirtapiv1.VirtualMachine) error
-	ReadVirtualMachine(namespace string, name string) (*kubevirtapiv1.VirtualMachine, error)
+	GetVirtualMachine(namespace string, name string) (*kubevirtapiv1.VirtualMachine, error)
 	UpdateVirtualMachine(namespace string, name string, vm *kubevirtapiv1.VirtualMachine, data []byte) error
 	DeleteVirtualMachine(namespace string, name string) error
 
 	// DataVolume CRUD operations
 
 	CreateDataVolume(vm *cdiv1.DataVolume) error
-	ReadDataVolume(namespace string, name string) (*cdiv1.DataVolume, error)
+	GetDataVolume(namespace string, name string) (*cdiv1.DataVolume, error)
 	UpdateDataVolume(namespace string, name string, dv *cdiv1.DataVolume, data []byte) error
 	DeleteDataVolume(namespace string, name string) error
 }
@@ -72,9 +72,9 @@ func (c *client) CreateVirtualMachine(vm *kubevirtapiv1.VirtualMachine) error {
 	return c.createResource(vm, vm.Namespace, vmRes())
 }
 
-func (c *client) ReadVirtualMachine(namespace string, name string) (*kubevirtapiv1.VirtualMachine, error) {
+func (c *client) GetVirtualMachine(namespace string, name string) (*kubevirtapiv1.VirtualMachine, error) {
 	var vm kubevirtapiv1.VirtualMachine
-	if err := c.readResource(namespace, name, vmRes(), &vm); err != nil {
+	if err := c.getResource(namespace, name, vmRes(), &vm); err != nil {
 		return nil, err
 	}
 	return &vm, nil
@@ -112,9 +112,9 @@ func (c *client) CreateDataVolume(dv *cdiv1.DataVolume) error {
 	return c.createResource(dv, dv.Namespace, dvRes())
 }
 
-func (c *client) ReadDataVolume(namespace string, name string) (*cdiv1.DataVolume, error) {
+func (c *client) GetDataVolume(namespace string, name string) (*cdiv1.DataVolume, error) {
 	var dv cdiv1.DataVolume
-	if err := c.readResource(namespace, name, dvRes(), &dv); err != nil {
+	if err := c.getResource(namespace, name, dvRes(), &dv); err != nil {
 		return nil, err
 	}
 	return &dv, nil
@@ -161,7 +161,7 @@ func (c *client) createResource(obj interface{}, namespace string, resource sche
 	return runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured, obj)
 }
 
-func (c *client) readResource(namespace string, name string, resource schema.GroupVersionResource, obj interface{}) error {
+func (c *client) getResource(namespace string, name string, resource schema.GroupVersionResource, obj interface{}) error {
 	resp, err := c.dynamicClient.Resource(resource).Namespace(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		return err

@@ -61,7 +61,7 @@ func resourceKubevirtDataVolumeCreate(d *schema.ResourceData, meta interface{}) 
 		Timeout: d.Timeout(schema.TimeoutCreate),
 		Refresh: func() (interface{}, string, error) {
 			var err error
-			dv, err = cli.ReadDataVolume(namespace, name)
+			dv, err = cli.GetDataVolume(namespace, name)
 			if err != nil {
 				if errors.IsNotFound(err) {
 					log.Printf("[DEBUG] data volume %s is not created yet", name)
@@ -98,7 +98,7 @@ func resourceKubevirtDataVolumeRead(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[INFO] Reading data volume %s", name)
 
-	dv, err := cli.ReadDataVolume(namespace, name)
+	dv, err := cli.GetDataVolume(namespace, name)
 	if err != nil {
 		log.Printf("[DEBUG] Received error: %#v", err)
 		return err
@@ -151,7 +151,7 @@ func resourceKubevirtDataVolumeDelete(d *schema.ResourceData, meta interface{}) 
 		Pending: []string{"Deleting"},
 		Timeout: d.Timeout(schema.TimeoutDelete),
 		Refresh: func() (interface{}, string, error) {
-			dv, err := cli.ReadDataVolume(namespace, name)
+			dv, err := cli.GetDataVolume(namespace, name)
 			if err != nil {
 				if errors.IsNotFound(err) {
 					return nil, "", nil
@@ -183,7 +183,7 @@ func resourceKubevirtDataVolumeExists(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[INFO] Checking data volume %s", name)
-	if _, err := cli.ReadDataVolume(namespace, name); err != nil {
+	if _, err := cli.GetDataVolume(namespace, name); err != nil {
 		if statusErr, ok := err.(*errors.StatusError); ok && statusErr.ErrStatus.Code == 404 {
 			return false, nil
 		}
