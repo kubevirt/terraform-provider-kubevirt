@@ -72,16 +72,16 @@ func FlattenVirtualMachine(in kubevirtapiv1.VirtualMachine) []interface{} {
 	return []interface{}{att}
 }
 
-func FromResourceData(d *schema.ResourceData) (*kubevirtapiv1.VirtualMachine, error) {
+func FromResourceData(resourceData *schema.ResourceData) (*kubevirtapiv1.VirtualMachine, error) {
 	result := &kubevirtapiv1.VirtualMachine{}
 
-	result.ObjectMeta = k8s.ExpandMetadata(d.Get("metadata").([]interface{}))
-	spec, err := expandVirtualMachineSpec(d.Get("spec").([]interface{}))
+	result.ObjectMeta = k8s.ExpandMetadata(resourceData.Get("metadata").([]interface{}))
+	spec, err := expandVirtualMachineSpec(resourceData.Get("spec").([]interface{}))
 	if err != nil {
 		return result, err
 	}
 	result.Spec = spec
-	status, err := expandVirtualMachineStatus(d.Get("status").([]interface{}))
+	status, err := expandVirtualMachineStatus(resourceData.Get("status").([]interface{}))
 	if err != nil {
 		return result, err
 	}
@@ -90,20 +90,20 @@ func FromResourceData(d *schema.ResourceData) (*kubevirtapiv1.VirtualMachine, er
 	return result, nil
 }
 
-func ToResourceData(vm kubevirtapiv1.VirtualMachine, d *schema.ResourceData) error {
-	if err := d.Set("metadata", k8s.FlattenMetadata(vm.ObjectMeta)); err != nil {
+func ToResourceData(vm kubevirtapiv1.VirtualMachine, resourceData *schema.ResourceData) error {
+	if err := resourceData.Set("metadata", k8s.FlattenMetadata(vm.ObjectMeta)); err != nil {
 		return err
 	}
-	if err := d.Set("spec", flattenVirtualMachineSpec(vm.Spec)); err != nil {
+	if err := resourceData.Set("spec", flattenVirtualMachineSpec(vm.Spec)); err != nil {
 		return err
 	}
-	if err := d.Set("status", flattenVirtualMachineStatus(vm.Status)); err != nil {
+	if err := resourceData.Set("status", flattenVirtualMachineStatus(vm.Status)); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func AppendPatchOps(keyPrefix, pathPrefix string, d *schema.ResourceData, ops []patch.PatchOperation) patch.PatchOperations {
-	return k8s.AppendPatchOps(keyPrefix+"metadata.0.", pathPrefix+"/metadata/", d, ops)
+func AppendPatchOps(keyPrefix, pathPrefix string, resourceData *schema.ResourceData, ops []patch.PatchOperation) patch.PatchOperations {
+	return k8s.AppendPatchOps(keyPrefix+"metadata.0.", pathPrefix+"/metadata/", resourceData, ops)
 }

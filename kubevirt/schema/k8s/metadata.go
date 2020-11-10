@@ -174,14 +174,14 @@ func FlattenMetadata(meta metav1.ObjectMeta) []interface{} {
 	return []interface{}{m}
 }
 
-func AppendPatchOps(keyPrefix, pathPrefix string, d *schema.ResourceData, ops []patch.PatchOperation) patch.PatchOperations {
-	if d.HasChange(keyPrefix + "annotations") {
-		oldV, newV := d.GetChange(keyPrefix + "annotations")
+func AppendPatchOps(keyPrefix, pathPrefix string, resourceData *schema.ResourceData, ops []patch.PatchOperation) patch.PatchOperations {
+	if resourceData.HasChange(keyPrefix + "annotations") {
+		oldV, newV := resourceData.GetChange(keyPrefix + "annotations")
 		diffOps := patch.DiffStringMap(pathPrefix+"annotations", oldV.(map[string]interface{}), newV.(map[string]interface{}))
 		ops = append(ops, diffOps...)
 	}
-	if d.HasChange(keyPrefix + "labels") {
-		oldV, newV := d.GetChange(keyPrefix + "labels")
+	if resourceData.HasChange(keyPrefix + "labels") {
+		oldV, newV := resourceData.GetChange(keyPrefix + "labels")
 		diffOps := patch.DiffStringMap(pathPrefix+"labels", oldV.(map[string]interface{}), newV.(map[string]interface{}))
 		ops = append(ops, diffOps...)
 	}

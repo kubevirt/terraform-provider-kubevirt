@@ -73,34 +73,34 @@ func FlattenDataVolumeTemplates(in []cdiv1.DataVolume) []interface{} {
 	return att
 }
 
-func FromResourceData(d *schema.ResourceData) (*cdiv1.DataVolume, error) {
+func FromResourceData(resourceData *schema.ResourceData) (*cdiv1.DataVolume, error) {
 	result := &cdiv1.DataVolume{}
 
-	result.ObjectMeta = k8s.ExpandMetadata(d.Get("metadata").([]interface{}))
-	spec, err := expandDataVolumeSpec(d.Get("spec").([]interface{}))
+	result.ObjectMeta = k8s.ExpandMetadata(resourceData.Get("metadata").([]interface{}))
+	spec, err := expandDataVolumeSpec(resourceData.Get("spec").([]interface{}))
 	if err != nil {
 		return result, err
 	}
 	result.Spec = spec
-	result.Status = expandDataVolumeStatus(d.Get("status").([]interface{}))
+	result.Status = expandDataVolumeStatus(resourceData.Get("status").([]interface{}))
 
 	return result, nil
 }
 
-func ToResourceData(dv cdiv1.DataVolume, d *schema.ResourceData) error {
-	if err := d.Set("metadata", k8s.FlattenMetadata(dv.ObjectMeta)); err != nil {
+func ToResourceData(dv cdiv1.DataVolume, resourceData *schema.ResourceData) error {
+	if err := resourceData.Set("metadata", k8s.FlattenMetadata(dv.ObjectMeta)); err != nil {
 		return err
 	}
-	if err := d.Set("spec", flattenDataVolumeSpec(dv.Spec)); err != nil {
+	if err := resourceData.Set("spec", flattenDataVolumeSpec(dv.Spec)); err != nil {
 		return err
 	}
-	if err := d.Set("status", flattenDataVolumeStatus(dv.Status)); err != nil {
+	if err := resourceData.Set("status", flattenDataVolumeStatus(dv.Status)); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func AppendPatchOps(keyPrefix, pathPrefix string, d *schema.ResourceData, ops []patch.PatchOperation) patch.PatchOperations {
-	return k8s.AppendPatchOps(keyPrefix+"metadata.0.", pathPrefix+"/metadata/", d, ops)
+func AppendPatchOps(keyPrefix, pathPrefix string, resourceData *schema.ResourceData, ops []patch.PatchOperation) patch.PatchOperations {
+	return k8s.AppendPatchOps(keyPrefix+"metadata.0.", pathPrefix+"/metadata/", resourceData, ops)
 }

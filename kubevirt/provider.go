@@ -107,25 +107,25 @@ func Provider() terraform.ResourceProvider {
 			"kubevirt_data_volume":     resourceKubevirtDataVolume(),
 		},
 	}
-	p.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
+	p.ConfigureFunc = func(resourceData *schema.ResourceData) (interface{}, error) {
 		terraformVersion := p.TerraformVersion
 		if terraformVersion == "" {
 			// Terraform 0.12 introduced this field to the protocol
 			// We can therefore assume that if it's missing it's 0.10 or 0.11
 			terraformVersion = "0.11+compatible"
 		}
-		return providerConfigure(d, terraformVersion)
+		return providerConfigure(resourceData, terraformVersion)
 	}
 	return p
 }
 
-func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
+func providerConfigure(resourceData *schema.ResourceData, terraformVersion string) (interface{}, error) {
 
 	var cfg *restclient.Config
 	var err error
-	if d.Get("load_config_file").(bool) {
+	if resourceData.Get("load_config_file").(bool) {
 		// Config file loading
-		cfg, err = tryLoadingConfigFile(d)
+		cfg, err = tryLoadingConfigFile(resourceData)
 	}
 
 	if err != nil {
@@ -138,36 +138,36 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	// Overriding with static configuration
 	cfg.UserAgent = fmt.Sprintf("HashiCorp/1.0 Terraform/%s", terraformVersion)
 
-	if v, ok := d.GetOk("host"); ok {
+	if v, ok := resourceData.GetOk("host"); ok {
 		cfg.Host = v.(string)
 	}
-	if v, ok := d.GetOk("username"); ok {
+	if v, ok := resourceData.GetOk("username"); ok {
 		cfg.Username = v.(string)
 	}
-	if v, ok := d.GetOk("password"); ok {
+	if v, ok := resourceData.GetOk("password"); ok {
 		cfg.Password = v.(string)
 	}
-	if v, ok := d.GetOk("insecure"); ok {
+	if v, ok := resourceData.GetOk("insecure"); ok {
 		cfg.Insecure = v.(bool)
 	}
-	if v, ok := d.GetOk("cluster_ca_certificate"); ok {
+	if v, ok := resourceData.GetOk("cluster_ca_certificate"); ok {
 		cfg.CAData = bytes.NewBufferString(v.(string)).Bytes()
 	}
-	if v, ok := d.GetOk("client_certificate"); ok {
+	if v, ok := resourceData.GetOk("client_certificate"); ok {
 		cfg.CertData = bytes.NewBufferString(v.(string)).Bytes()
 	}
-	if v, ok := d.GetOk("client_key"); ok {
+	if v, ok := resourceData.GetOk("client_key"); ok {
 		cfg.KeyData = bytes.NewBufferString(v.(string)).Bytes()
 	}
-	if v, ok := d.GetOk("token"); ok {
+	if v, ok := resourceData.GetOk("token"); ok {
 		cfg.BearerToken = v.(string)
 	}
 
 	return client.NewClient(cfg)
 }
 
-func tryLoadingConfigFile(d *schema.ResourceData) (*restclient.Config, error) {
-	path, err := homedir.Expand(d.Get("config_path").(string))
+func tryLoadingConfigFile(resourceData *schema.ResourceData) (*restclient.Config, error) {
+	path, err := homedir.Expand(resourceData.Get("config_path").(string))
 	if err != nil {
 		return nil, err
 	}
@@ -179,9 +179,9 @@ func tryLoadingConfigFile(d *schema.ResourceData) (*restclient.Config, error) {
 	overrides := &clientcmd.ConfigOverrides{}
 	ctxSuffix := "; default context"
 
-	ctx, ctxOk := d.GetOk("config_context")
-	authInfo, authInfoOk := d.GetOk("config_context_auth_info")
-	cluster, clusterOk := d.GetOk("config_context_cluster")
+	ctx, ctxOk := resourceData.GetOk("config_context")
+	authInfo, authInfoOk := resourceData.GetOk("config_context_auth_info")
+	cluster, clusterOk := resourceData.GetOk("config_context_cluster")
 	if ctxOk || authInfoOk || clusterOk {
 		ctxSuffix = "; overriden context"
 		if ctxOk {

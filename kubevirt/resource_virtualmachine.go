@@ -33,10 +33,10 @@ func resourceKubevirtVirtualMachine() *schema.Resource {
 	}
 }
 
-func resourceKubevirtVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceKubevirtVirtualMachineCreate(resourceData *schema.ResourceData, meta interface{}) error {
 	cli := (meta).(client.Client)
 
-	vm, err := virtualmachine.FromResourceData(d)
+	vm, err := virtualmachine.FromResourceData(resourceData)
 	if err != nil {
 		return err
 	}
@@ -46,10 +46,10 @@ func resourceKubevirtVirtualMachineCreate(d *schema.ResourceData, meta interface
 		return err
 	}
 	log.Printf("[INFO] Submitted new virtual machine: %#v", vm)
-	if err := virtualmachine.ToResourceData(*vm, d); err != nil {
+	if err := virtualmachine.ToResourceData(*vm, resourceData); err != nil {
 		return err
 	}
-	d.SetId(utils.BuildId(vm.ObjectMeta))
+	resourceData.SetId(utils.BuildId(vm.ObjectMeta))
 
 	// Wait for virtual machine instance's status phase to be succeeded:
 	name := vm.ObjectMeta.Name
@@ -58,7 +58,7 @@ func resourceKubevirtVirtualMachineCreate(d *schema.ResourceData, meta interface
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"Creating"},
 		Target:  []string{"Succeeded"},
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: resourceData.Timeout(schema.TimeoutCreate),
 		Refresh: func() (interface{}, string, error) {
 			var err error
 			vm, err = cli.GetVirtualMachine(namespace, name)
@@ -83,13 +83,13 @@ func resourceKubevirtVirtualMachineCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("%s", err)
 	}
 
-	return resourceKubevirtVirtualMachineRead(d, meta)
+	return resourceKubevirtVirtualMachineRead(resourceData, meta)
 }
 
-func resourceKubevirtVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
+func resourceKubevirtVirtualMachineRead(resourceData *schema.ResourceData, meta interface{}) error {
 	cli := (meta).(client.Client)
 
-	namespace, name, err := utils.IdParts(d.Id())
+	namespace, name, err := utils.IdParts(resourceData.Id())
 	if err != nil {
 		return err
 	}
@@ -103,18 +103,18 @@ func resourceKubevirtVirtualMachineRead(d *schema.ResourceData, meta interface{}
 	}
 	log.Printf("[INFO] Received virtual machine: %#v", vm)
 
-	return virtualmachine.ToResourceData(*vm, d)
+	return virtualmachine.ToResourceData(*vm, resourceData)
 }
 
-func resourceKubevirtVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceKubevirtVirtualMachineUpdate(resourceData *schema.ResourceData, meta interface{}) error {
 	cli := (meta).(client.Client)
 
-	namespace, name, err := utils.IdParts(d.Id())
+	namespace, name, err := utils.IdParts(resourceData.Id())
 	if err != nil {
 		return err
 	}
 
-	ops := virtualmachine.AppendPatchOps("", "", d, make([]patch.PatchOperation, 0, 0))
+	ops := virtualmachine.AppendPatchOps("", "", resourceData, make([]patch.PatchOperation, 0, 0))
 	data, err := ops.MarshalJSON()
 	if err != nil {
 		return fmt.Errorf("Failed to marshal update operations: %s", err)
@@ -128,11 +128,11 @@ func resourceKubevirtVirtualMachineUpdate(d *schema.ResourceData, meta interface
 
 	log.Printf("[INFO] Submitted updated virtual machine: %#v", out)
 
-	return resourceKubevirtVirtualMachineRead(d, meta)
+	return resourceKubevirtVirtualMachineRead(resourceData, meta)
 }
 
-func resourceKubevirtVirtualMachineDelete(d *schema.ResourceData, meta interface{}) error {
-	namespace, name, err := utils.IdParts(d.Id())
+func resourceKubevirtVirtualMachineDelete(resourceData *schema.ResourceData, meta interface{}) error {
+	namespace, name, err := utils.IdParts(resourceData.Id())
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func resourceKubevirtVirtualMachineDelete(d *schema.ResourceData, meta interface
 	// Wait for virtual machine instance to be removed:
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"Deleting"},
-		Timeout: d.Timeout(schema.TimeoutDelete),
+		Timeout: resourceData.Timeout(schema.TimeoutDelete),
 		Refresh: func() (interface{}, string, error) {
 			vm, err := cli.GetVirtualMachine(namespace, name)
 			if err != nil {
@@ -168,12 +168,12 @@ func resourceKubevirtVirtualMachineDelete(d *schema.ResourceData, meta interface
 
 	log.Printf("[INFO] virtual machine %s deleted", name)
 
-	d.SetId("")
+	resourceData.SetId("")
 	return nil
 }
 
-func resourceKubevirtVirtualMachineExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	namespace, name, err := utils.IdParts(d.Id())
+func resourceKubevirtVirtualMachineExists(resourceData *schema.ResourceData, meta interface{}) (bool, error) {
+	namespace, name, err := utils.IdParts(resourceData.Id())
 	if err != nil {
 		return false, err
 	}

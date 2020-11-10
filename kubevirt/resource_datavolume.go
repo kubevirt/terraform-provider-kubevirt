@@ -33,10 +33,10 @@ func resourceKubevirtDataVolume() *schema.Resource {
 	}
 }
 
-func resourceKubevirtDataVolumeCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceKubevirtDataVolumeCreate(resourceData *schema.ResourceData, meta interface{}) error {
 	cli := (meta).(client.Client)
 
-	dv, err := datavolume.FromResourceData(d)
+	dv, err := datavolume.FromResourceData(resourceData)
 	if err != nil {
 		return err
 	}
@@ -46,10 +46,10 @@ func resourceKubevirtDataVolumeCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 	log.Printf("[INFO] Submitted new data volume: %#v", dv)
-	if err := datavolume.ToResourceData(*dv, d); err != nil {
+	if err := datavolume.ToResourceData(*dv, resourceData); err != nil {
 		return err
 	}
-	d.SetId(utils.BuildId(dv.ObjectMeta))
+	resourceData.SetId(utils.BuildId(dv.ObjectMeta))
 
 	// Wait for data volume instance's status phase to be succeeded:
 	name := dv.ObjectMeta.Name
@@ -58,7 +58,7 @@ func resourceKubevirtDataVolumeCreate(d *schema.ResourceData, meta interface{}) 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"Creating"},
 		Target:  []string{"Succeeded"},
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: resourceData.Timeout(schema.TimeoutCreate),
 		Refresh: func() (interface{}, string, error) {
 			var err error
 			dv, err = cli.GetDataVolume(namespace, name)
@@ -85,13 +85,13 @@ func resourceKubevirtDataVolumeCreate(d *schema.ResourceData, meta interface{}) 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf("%s", err)
 	}
-	return datavolume.ToResourceData(*dv, d)
+	return datavolume.ToResourceData(*dv, resourceData)
 }
 
-func resourceKubevirtDataVolumeRead(d *schema.ResourceData, meta interface{}) error {
+func resourceKubevirtDataVolumeRead(resourceData *schema.ResourceData, meta interface{}) error {
 	cli := (meta).(client.Client)
 
-	namespace, name, err := utils.IdParts(d.Id())
+	namespace, name, err := utils.IdParts(resourceData.Id())
 	if err != nil {
 		return err
 	}
@@ -105,18 +105,18 @@ func resourceKubevirtDataVolumeRead(d *schema.ResourceData, meta interface{}) er
 	}
 	log.Printf("[INFO] Received data volume: %#v", dv)
 
-	return datavolume.ToResourceData(*dv, d)
+	return datavolume.ToResourceData(*dv, resourceData)
 }
 
-func resourceKubevirtDataVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceKubevirtDataVolumeUpdate(resourceData *schema.ResourceData, meta interface{}) error {
 	cli := (meta).(client.Client)
 
-	namespace, name, err := utils.IdParts(d.Id())
+	namespace, name, err := utils.IdParts(resourceData.Id())
 	if err != nil {
 		return err
 	}
 
-	ops := datavolume.AppendPatchOps("", "", d, make([]patch.PatchOperation, 0, 0))
+	ops := datavolume.AppendPatchOps("", "", resourceData, make([]patch.PatchOperation, 0, 0))
 	data, err := ops.MarshalJSON()
 	if err != nil {
 		return fmt.Errorf("Failed to marshal update operations: %s", err)
@@ -130,13 +130,13 @@ func resourceKubevirtDataVolumeUpdate(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[INFO] Submitted updated data volume: %#v", out)
 
-	return resourceKubevirtDataVolumeRead(d, meta)
+	return resourceKubevirtDataVolumeRead(resourceData, meta)
 }
 
-func resourceKubevirtDataVolumeDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceKubevirtDataVolumeDelete(resourceData *schema.ResourceData, meta interface{}) error {
 	cli := (meta).(client.Client)
 
-	namespace, name, err := utils.IdParts(d.Id())
+	namespace, name, err := utils.IdParts(resourceData.Id())
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,7 @@ func resourceKubevirtDataVolumeDelete(d *schema.ResourceData, meta interface{}) 
 	// Wait for data volume instance to be removed:
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"Deleting"},
-		Timeout: d.Timeout(schema.TimeoutDelete),
+		Timeout: resourceData.Timeout(schema.TimeoutDelete),
 		Refresh: func() (interface{}, string, error) {
 			dv, err := cli.GetDataVolume(namespace, name)
 			if err != nil {
@@ -170,14 +170,14 @@ func resourceKubevirtDataVolumeDelete(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[INFO] data volume %s deleted", name)
 
-	d.SetId("")
+	resourceData.SetId("")
 	return nil
 }
 
-func resourceKubevirtDataVolumeExists(d *schema.ResourceData, meta interface{}) (bool, error) {
+func resourceKubevirtDataVolumeExists(resourceData *schema.ResourceData, meta interface{}) (bool, error) {
 	cli := (meta).(client.Client)
 
-	namespace, name, err := utils.IdParts(d.Id())
+	namespace, name, err := utils.IdParts(resourceData.Id())
 	if err != nil {
 		return false, err
 	}
