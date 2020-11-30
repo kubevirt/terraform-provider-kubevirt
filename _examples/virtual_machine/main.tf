@@ -3,36 +3,6 @@ provider "kubevirt" {
 provider "kubernetes" {
 }
 
-// resource "kubernetes_service_account" "root" {
-//   metadata {
-//     name      = "test-vm-serviceaccountdisk"
-//     namespace = "test-terraform-provider"
-//     labels = {
-//       "key1" = "value1"
-//     }
-//   }
-// }
-// 
-// resource "kubernetes_role_binding" "root" {
-//   metadata {
-//     name      = "test-vm-serviceaccountdisk"
-//     namespace = "tenantcluster"
-//     labels = {
-//       "key1" = "value1"
-//     }
-//   }
-//   role_ref {
-//     api_group = "rbac.authorization.k8s.io"
-//     kind      = "ClusterRole"
-//     name      = "system:aggregate-to-view"
-//   }
-//   subject {
-//     kind      = "ServiceAccount"
-//     name      = kubernetes_service_account.root.metadata[0].name
-//     namespace = "tenantcluster"
-//   }
-// }
-
 resource "kubevirt_virtual_machine" "virtual_machine" {
   metadata {
     name      = "test-vm"
@@ -80,16 +50,6 @@ resource "kubevirt_virtual_machine" "virtual_machine" {
             }
           }
         }
-        // {
-        //   name = "test-vm-cloudinitdisk"
-        //   volume_source = {
-        //     cloud_init_config_drive = {
-        //       user_data_secret_ref = {
-        //         name = "ignition_secret_name"
-        //       }
-        //     }
-        //   }
-        // },
         domain {
           resources {
             requests = {
@@ -106,22 +66,6 @@ resource "kubevirt_virtual_machine" "virtual_machine" {
                 }
               }
             }
-            // disk {
-            //   name = "test-vm-cloudinitdisk"
-            //   disk_device = {
-            //     disk = {
-            //       bus = "virtio"
-            //     }
-            //   }
-            // }
-            // disk {
-            //   name = kubernetes_service_account.root.metadata[0].name
-            //   disk_device {
-            //     disk {
-            //       bus = "virtio"
-            //     }
-            //   }
-            // }
             interface {
               name                     = "main"
               interface_binding_method = "InterfaceBridge"
