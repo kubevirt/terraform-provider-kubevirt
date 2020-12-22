@@ -131,8 +131,9 @@ func expandVirtualMachineInstanceSpec(virtualMachineInstanceSpec []interface{}) 
 			result.EvictionStrategy = &evictionStrategy
 		}
 	}
-	if v, ok := in["termination_grace_period_seconds"].(int64); ok {
-		result.TerminationGracePeriodSeconds = &v
+	if v, ok := in["termination_grace_period_seconds"].(int); ok {
+		seconds := int64(v)
+		result.TerminationGracePeriodSeconds = &seconds
 	}
 	if v, ok := in["volume"].([]interface{}); ok {
 		result.Volumes = expandVolumes(v)
