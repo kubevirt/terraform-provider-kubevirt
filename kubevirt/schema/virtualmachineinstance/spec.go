@@ -41,7 +41,7 @@ func virtualMachineInstanceSpecFields() map[string]*schema.Schema {
 			}, false),
 		},
 		"termination_grace_period_seconds": {
-			Type:        schema.TypeFloat,
+			Type:        schema.TypeInt,
 			Description: "Grace period observed after signalling a VirtualMachineInstance to stop after which the VirtualMachineInstance is force terminated.",
 			Optional:    true,
 		},
