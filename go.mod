@@ -13,6 +13,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/zclconf/go-cty v1.5.1 // indirect
 	github.com/zclconf/go-cty-yaml v1.0.2 // indirect
+	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.19.0
 	k8s.io/apiextensions-apiserver v0.19.0 // indirect
 	k8s.io/apimachinery v0.19.0

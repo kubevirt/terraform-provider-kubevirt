@@ -353,6 +353,8 @@ github.com/oklog/run
 github.com/openshift/custom-resource-status/conditions/v1
 # github.com/pborman/uuid v1.2.0
 github.com/pborman/uuid
+# github.com/pkg/errors v0.9.1
+github.com/pkg/errors
 # github.com/posener/complete v1.2.1
 github.com/posener/complete
 github.com/posener/complete/cmd
@@ -599,6 +601,13 @@ gopkg.in/inf.v0
 gopkg.in/warnings.v0
 # gopkg.in/yaml.v2 v2.2.8
 gopkg.in/yaml.v2
+# gotest.tools v2.2.0+incompatible
+## explicit
+gotest.tools/assert
+gotest.tools/assert/cmp
+gotest.tools/internal/difflib
+gotest.tools/internal/format
+gotest.tools/internal/source
 # k8s.io/api v0.19.0 => k8s.io/api v0.19.0
 ## explicit
 k8s.io/api/admissionregistration/v1
