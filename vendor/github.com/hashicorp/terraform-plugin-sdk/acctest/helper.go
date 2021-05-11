@@ -1,17 +1,15 @@
 package acctest
 
 import (
-	"log"
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-sdk/plugin"
-	tftest "github.com/hashicorp/terraform-plugin-test/v2"
+	tftest "github.com/hashicorp/terraform-plugin-test"
 )
 
 var TestHelper *tftest.Helper
 
 func UseBinaryDriver(name string, providerFunc plugin.ProviderFunc) {
-	log.Println("[DEBUG] not using binary driver name, it's no longer needed")
 	sourceDir, err := os.Getwd()
 	if err != nil {
 		panic(err)
@@ -23,6 +21,6 @@ func UseBinaryDriver(name string, providerFunc plugin.ProviderFunc) {
 		})
 		os.Exit(0)
 	} else {
-		TestHelper = tftest.AutoInitProviderHelper(sourceDir)
+		TestHelper = tftest.AutoInitProviderHelper(name, sourceDir)
 	}
 }

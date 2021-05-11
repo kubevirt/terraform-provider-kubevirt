@@ -1,7 +1,6 @@
 package resource
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -11,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/internal/addrs"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	tftest "github.com/hashicorp/terraform-plugin-test/v2"
+	tftest "github.com/hashicorp/terraform-plugin-test"
 )
 
 func testStepNewImportState(t *testing.T, c TestCase, wd *tftest.WorkingDir, step TestStep, cfg string) error {
@@ -23,14 +22,7 @@ func testStepNewImportState(t *testing.T, c TestCase, wd *tftest.WorkingDir, ste
 	}
 
 	// get state from check sequence
-	var state *terraform.State
-	err := runProviderCommand(t, func() error {
-		state = getState(t, wd)
-		return nil
-	}, wd, c.ProviderFactories)
-	if err != nil {
-		return fmt.Errorf("Error getting state: %v", err)
-	}
+	state := getState(t, wd)
 
 	// Determine the ID to import
 	var importId string
@@ -62,28 +54,9 @@ func testStepNewImportState(t *testing.T, c TestCase, wd *tftest.WorkingDir, ste
 	importWd := acctest.TestHelper.RequireNewWorkingDir(t)
 	defer importWd.Close()
 	importWd.RequireSetConfig(t, step.Config)
-	err = runProviderCommand(t, func() error {
-		return importWd.Init()
-	}, importWd, c.ProviderFactories)
-	if err != nil {
-		return fmt.Errorf("Error running init: %v", err)
-	}
-
-	err = runProviderCommand(t, func() error {
-		return importWd.Import(step.ResourceName, importId)
-	}, importWd, c.ProviderFactories)
-	if err != nil {
-		return err
-	}
-
-	var importState *terraform.State
-	err = runProviderCommand(t, func() error {
-		importState = getState(t, importWd)
-		return nil
-	}, importWd, c.ProviderFactories)
-	if err != nil {
-		return fmt.Errorf("Error getting state after import: %v", err)
-	}
+	importWd.RequireInit(t)
+	importWd.RequireImport(t, step.ResourceName, importId)
+	importState := getState(t, wd)
 
 	// Go through the imported state and verify
 	if step.ImportStateCheck != nil {
@@ -108,16 +81,8 @@ func testStepNewImportState(t *testing.T, c TestCase, wd *tftest.WorkingDir, ste
 		for _, r := range new {
 			// Find the existing resource
 			var oldR *terraform.ResourceState
-			for r2Key, r2 := range old {
-				// Ensure that we do not match against data sources as they
-				// cannot be imported and are not what we want to verify.
-				// Mode is not present in ResourceState so we use the
-				// stringified ResourceStateKey for comparison.
-				if strings.HasPrefix(r2Key, "data.") {
-					continue
-				}
-
-				if r2.Primary != nil && r2.Primary.ID == r.Primary.ID && r2.Type == r.Type && r2.Provider == r.Provider {
+			for _, r2 := range old {
+				if r2.Primary != nil && r2.Primary.ID == r.Primary.ID && r2.Type == r.Type {
 					oldR = r2
 					break
 				}
@@ -207,26 +172,6 @@ func testStepNewImportState(t *testing.T, c TestCase, wd *tftest.WorkingDir, ste
 							break
 						}
 					}
-				}
-			}
-
-			// timeouts are only _sometimes_ added to state. To
-			// account for this, just don't compare timeouts at
-			// all.
-			for k := range actual {
-				if strings.HasPrefix(k, "timeouts.") {
-					delete(actual, k)
-				}
-				if k == "timeouts" {
-					delete(actual, k)
-				}
-			}
-			for k := range expected {
-				if strings.HasPrefix(k, "timeouts.") {
-					delete(expected, k)
-				}
-				if k == "timeouts" {
-					delete(expected, k)
 				}
 			}
 

@@ -11,29 +11,14 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-sdk/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	tftest "github.com/hashicorp/terraform-plugin-test/v2"
+	tftest "github.com/hashicorp/terraform-plugin-test"
 )
 
-func runPostTestDestroy(t *testing.T, c TestCase, wd *tftest.WorkingDir, factories map[string]terraform.ResourceProviderFactory) error {
-	t.Helper()
-
-	err := runProviderCommand(t, func() error {
-		wd.RequireDestroy(t)
-		return nil
-	}, wd, factories)
-	if err != nil {
-		return err
-	}
+func runPostTestDestroy(t *testing.T, c TestCase, wd *tftest.WorkingDir) error {
+	wd.RequireDestroy(t)
 
 	if c.CheckDestroy != nil {
-		var statePostDestroy *terraform.State
-		err := runProviderCommand(t, func() error {
-			statePostDestroy = getState(t, wd)
-			return nil
-		}, wd, factories)
-		if err != nil {
-			return err
-		}
+		statePostDestroy := getState(t, wd)
 
 		if err := c.CheckDestroy(statePostDestroy); err != nil {
 			return err
@@ -44,47 +29,24 @@ func runPostTestDestroy(t *testing.T, c TestCase, wd *tftest.WorkingDir, factori
 }
 
 func RunNewTest(t *testing.T, c TestCase, providers map[string]terraform.ResourceProvider) {
-	t.Helper()
-
 	spewConf := spew.NewDefaultConfig()
 	spewConf.SortKeys = true
 	wd := acctest.TestHelper.RequireNewWorkingDir(t)
 
 	defer func() {
-		var statePreDestroy *terraform.State
-		err := runProviderCommand(t, func() error {
-			statePreDestroy = getState(t, wd)
-			return nil
-		}, wd, c.ProviderFactories)
-		if err != nil {
-			t.Fatalf("Error retrieving state, there may be dangling resources: %s", err.Error())
-			return
-		}
+		statePreDestroy := getState(t, wd)
 
 		if !stateIsEmpty(statePreDestroy) {
-			err := runPostTestDestroy(t, c, wd, c.ProviderFactories)
-			if err != nil {
-				t.Fatalf("Error running post-test destroy, there may be dangling resources: %s", err.Error())
-			}
+			runPostTestDestroy(t, c, wd)
 		}
 
 		wd.Close()
 	}()
 
-	providerCfg, err := testProviderConfig(c)
-	if err != nil {
-		t.Fatal(err)
-	}
+	providerCfg := testProviderConfig(c)
 
 	wd.RequireSetConfig(t, providerCfg)
-
-	err = runProviderCommand(t, func() error {
-		return wd.Init()
-	}, wd, c.ProviderFactories)
-	if err != nil {
-		t.Fatalf("Error running init: %s", err.Error())
-		return
-	}
+	wd.RequireInit(t)
 
 	// use this to track last step succesfully applied
 	// acts as default for import tests
@@ -102,7 +64,7 @@ func RunNewTest(t *testing.T, c TestCase, providers map[string]terraform.Resourc
 				t.Fatal(err)
 			}
 			if skip {
-				log.Printf("[WARN] Skipping step %d/%d", i+1, len(c.Steps))
+				log.Printf("[WARN] Skipping step %d", i)
 				continue
 			}
 		}
@@ -110,17 +72,8 @@ func RunNewTest(t *testing.T, c TestCase, providers map[string]terraform.Resourc
 		if step.ImportState {
 			step.providers = providers
 			err := testStepNewImportState(t, c, wd, step, appliedCfg)
-			if step.ExpectError != nil {
-				if err == nil {
-					t.Fatalf("Step %d/%d error running import: expected an error but got none", i+1, len(c.Steps))
-				}
-				if !step.ExpectError.MatchString(err.Error()) {
-					t.Fatalf("Step %d/%d error running import, expected an error with pattern (%s), no match on: %s", i+1, len(c.Steps), step.ExpectError.String(), err)
-				}
-			} else {
-				if err != nil {
-					t.Fatalf("Step %d/%d error running import: %s", i+1, len(c.Steps), err)
-				}
+			if err != nil {
+				t.Fatal(err)
 			}
 			continue
 		}
@@ -129,14 +82,14 @@ func RunNewTest(t *testing.T, c TestCase, providers map[string]terraform.Resourc
 			err := testStepNewConfig(t, c, wd, step)
 			if step.ExpectError != nil {
 				if err == nil {
-					t.Fatalf("Step %d/%d, expected an error but got none", i+1, len(c.Steps))
+					t.Fatal("Expected an error but got none")
 				}
 				if !step.ExpectError.MatchString(err.Error()) {
-					t.Fatalf("Step %d/%d, expected an error with pattern, no match on: %s", i+1, len(c.Steps), err)
+					t.Fatalf("Expected an error with pattern, no match on: %s", err)
 				}
 			} else {
 				if err != nil {
-					t.Fatalf("Step %d/%d error: %s", i+1, len(c.Steps), err)
+					t.Fatal(err)
 				}
 			}
 			appliedCfg = step.Config
@@ -148,8 +101,6 @@ func RunNewTest(t *testing.T, c TestCase, providers map[string]terraform.Resourc
 }
 
 func getState(t *testing.T, wd *tftest.WorkingDir) *terraform.State {
-	t.Helper()
-
 	jsonState := wd.RequireState(t)
 	state, err := shimStateFromJson(jsonState)
 	if err != nil {
@@ -180,8 +131,6 @@ func planIsEmpty(plan *tfjson.Plan) bool {
 }
 
 func testIDRefresh(c TestCase, t *testing.T, wd *tftest.WorkingDir, step TestStep, r *terraform.ResourceState) error {
-	t.Helper()
-
 	spewConf := spew.NewDefaultConfig()
 	spewConf.SortKeys = true
 
@@ -193,22 +142,13 @@ func testIDRefresh(c TestCase, t *testing.T, wd *tftest.WorkingDir, step TestSte
 
 	// Temporarily set the config to a minimal provider config for the refresh
 	// test. After the refresh we can reset it.
-	cfg, err := testProviderConfig(c)
-	if err != nil {
-		return err
-	}
+	cfg := testProviderConfig(c)
 	wd.RequireSetConfig(t, cfg)
 	defer wd.RequireSetConfig(t, step.Config)
 
 	// Refresh!
-	err = runProviderCommand(t, func() error {
-		wd.RequireRefresh(t)
-		state = getState(t, wd)
-		return nil
-	}, wd, c.ProviderFactories)
-	if err != nil {
-		return err
-	}
+	wd.RequireRefresh(t)
+	state = getState(t, wd)
 
 	// Verify attribute equivalence.
 	actualR := state.RootModule().Resources[c.IDRefreshName]
