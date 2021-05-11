@@ -13,37 +13,36 @@ import (
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/test_utils"
 )
 
-
 func TestExpandDataVolumeTemplates(t *testing.T) {
 	baseOutput := expand_utils.GetBaseOutputForDataVolume()
 
 	cases := []struct {
-		name string
-		shouldError bool
-		expectedOutput []cdiv1.DataVolume
+		name                 string
+		shouldError          bool
+		expectedOutput       []cdiv1.DataVolume
 		expectedErrorMessage string
-		modifier func(interface{})
+		modifier             func(interface{})
 	}{
 		{
-			name: "working case",
+			name:        "working case",
 			shouldError: false,
 			expectedOutput: []cdiv1.DataVolume{
 				baseOutput,
 			},
 		},
 		{
-			name: "bad pvc requests",
+			name:        "bad pvc requests",
 			shouldError: true,
-			modifier: func(input interface{}){
+			modifier: func(input interface{}) {
 				pvcRequirements := test_utils.GetPVCRequirements(input)
 				pvcRequirements.(map[string]interface{})["requests"].(map[string]interface{})["storage"] = "a5"
 			},
 			expectedErrorMessage: "quantities must match the regular expression '^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$'",
 		},
 		{
-			name: "bad pvc limits",
+			name:        "bad pvc limits",
 			shouldError: true,
-			modifier: func(input interface{}){
+			modifier: func(input interface{}) {
 				pvcRequirements := test_utils.GetPVCRequirements(input)
 				pvcRequirements.(map[string]interface{})["limits"].(map[string]interface{})["storage"] = "a5"
 			},
@@ -55,16 +54,16 @@ func TestExpandDataVolumeTemplates(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			input := expand_utils.GetBaseInputForDataVolume()
 
-			if (tc.modifier != nil) {
+			if tc.modifier != nil {
 				tc.modifier(input)
 			}
 			output, err := ExpandDataVolumeTemplates([]interface{}{input})
 
-			if (tc.shouldError) {
+			if tc.shouldError {
 				assert.Equal(t, tc.expectedErrorMessage, err.Error())
 			} else {
 				assert.NilError(t, err)
-				assert.DeepEqual(t, output[0], baseOutput)	
+				assert.DeepEqual(t, output[0], baseOutput)
 			}
 		})
 	}
@@ -77,7 +76,7 @@ func TestFlattenDataVolumeTemplates(t *testing.T) {
 	cases := []struct {
 		Input          []cdiv1.DataVolume
 		ExpectedOutput []interface{}
-	} {
+	}{
 		{
 			Input: []cdiv1.DataVolume{
 				input1,

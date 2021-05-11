@@ -31,7 +31,7 @@ func networkFields() map[string]*schema.Schema {
 								"vm_network_cidr": {
 									Type:        schema.TypeString,
 									Description: "CIDR for vm network.",
-									Required:    true,
+									Optional:    true,
 								},
 							},
 						},
@@ -119,11 +119,12 @@ func expandNetworkSource(networkSource []interface{}) kubevirtapiv1.NetworkSourc
 }
 
 func expandPodNetwork(pod []interface{}) *kubevirtapiv1.PodNetwork {
+	result := &kubevirtapiv1.PodNetwork{}
+
 	if len(pod) == 0 || pod[0] == nil {
-		return nil
+		return result
 	}
 
-	result := &kubevirtapiv1.PodNetwork{}
 	in := pod[0].(map[string]interface{})
 
 	if v, ok := in["vm_network_cidr"].(string); ok {

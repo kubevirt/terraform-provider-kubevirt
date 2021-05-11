@@ -18,59 +18,59 @@ func TestExpandVirtualMachineSpec(t *testing.T) {
 	baseOutput := expand_utils.GetBaseOutputForVirtualMachine()
 
 	cases := []struct {
-		name string
-		shouldError bool
-		expectedOutput []kubevirtapiv1.VirtualMachineSpec
+		name                 string
+		shouldError          bool
+		expectedOutput       []kubevirtapiv1.VirtualMachineSpec
 		expectedErrorMessage string
-		modifier func(interface{})
+		modifier             func(interface{})
 	}{
 		{
-			name: "working case",
+			name:        "working case",
 			shouldError: false,
 			expectedOutput: []kubevirtapiv1.VirtualMachineSpec{
 				baseOutput,
 			},
 		},
 		{
-			name: "bad toleration_seconds",
+			name:        "bad toleration_seconds",
 			shouldError: true,
-			modifier: func(input interface{}){
+			modifier: func(input interface{}) {
 				tolerations := test_utils.GetVirtualMachineTolerations(input)
 				tolerations.(map[string]interface{})["toleration_seconds"] = "a5"
 			},
 			expectedErrorMessage: "invalid toleration_seconds must be int or \"\", got \"a5\"",
 		},
 		{
-			name: "bad pvc requests",
+			name:        "bad pvc requests",
 			shouldError: true,
-			modifier: func(input interface{}){
+			modifier: func(input interface{}) {
 				pvcRequirements := test_utils.GetPVCRequirements(test_utils.GetDataVolume(input))
 				pvcRequirements.(map[string]interface{})["requests"].(map[string]interface{})["storage"] = "a5"
 			},
 			expectedErrorMessage: "quantities must match the regular expression '^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$'",
 		},
 		{
-			name: "bad pvc limits",
+			name:        "bad pvc limits",
 			shouldError: true,
-			modifier: func(input interface{}){
+			modifier: func(input interface{}) {
 				pvcRequirements := test_utils.GetPVCRequirements(test_utils.GetDataVolume(input))
 				pvcRequirements.(map[string]interface{})["limits"].(map[string]interface{})["storage"] = "a5"
 			},
 			expectedErrorMessage: "quantities must match the regular expression '^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$'",
 		},
 		{
-			name: "bad domain resource requests",
+			name:        "bad domain resource requests",
 			shouldError: true,
-			modifier: func(input interface{}){
+			modifier: func(input interface{}) {
 				domainResources := test_utils.GetDomainResources(input)
 				domainResources.(map[string]interface{})["requests"].(map[string]interface{})["storage"] = "a5"
 			},
 			expectedErrorMessage: "quantities must match the regular expression '^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$'",
 		},
 		{
-			name: "bad domain resource limits",
+			name:        "bad domain resource limits",
 			shouldError: true,
-			modifier: func(input interface{}){
+			modifier: func(input interface{}) {
 				domainResources := test_utils.GetDomainResources(input)
 				domainResources.(map[string]interface{})["limits"].(map[string]interface{})["storage"] = "a5"
 			},
@@ -82,16 +82,16 @@ func TestExpandVirtualMachineSpec(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			input := expand_utils.GetBaseInputForVirtualMachine()
 
-			if (tc.modifier != nil) {
+			if tc.modifier != nil {
 				tc.modifier(input)
 			}
 			output, err := expandVirtualMachineSpec([]interface{}{input})
 
-			if (tc.shouldError) {
+			if tc.shouldError {
 				assert.Equal(t, tc.expectedErrorMessage, err.Error())
 			} else {
 				assert.NilError(t, err)
-				assert.DeepEqual(t, output, baseOutput)	
+				assert.DeepEqual(t, output, baseOutput)
 			}
 		})
 	}
@@ -103,7 +103,7 @@ func TestFlattenVirtualMachineSpec(t *testing.T) {
 
 	cases := []struct {
 		// name string
-		input          kubevirtapiv1.VirtualMachineSpec
+		input kubevirtapiv1.VirtualMachineSpec
 		// shouldError bool
 		expectedOutput []interface{}
 	}{
@@ -134,7 +134,7 @@ func nullifyUncomparableFields(output *[]interface{}) {
 	vmAffinity := (*output)[0].(map[string]interface{})["template"].([]interface{})[0].(map[string]interface{})["spec"].([]interface{})[0].(map[string]interface{})["affinity"]
 
 	podAntiAffinity := vmAffinity.([]interface{})[0].(map[string]interface{})["pod_anti_affinity"].([]interface{})[0].(map[string]interface{})
-	
+
 	podAntiAffinityPreferredNamespace := podAntiAffinity["preferred_during_scheduling_ignored_during_execution"].([]interface{})[0].(map[string]interface{})["pod_affinity_term"].([]interface{})[0].(map[string]interface{})["namespaces"]
 	test_utils.NullifySchemaSetFunction(podAntiAffinityPreferredNamespace.(*schema.Set))
 

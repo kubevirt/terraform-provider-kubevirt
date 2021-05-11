@@ -329,7 +329,7 @@ func flattenDomainSpec(in kubevirtapiv1.DomainSpec) []interface{} {
 
 func flattenResources(in kubevirtapiv1.ResourceRequirements) []interface{} {
 	att := make(map[string]interface{})
-	
+
 	att["requests"] = utils.FlattenStringMap(utils.FlattenResourceList(in.Requests))
 	att["limits"] = utils.FlattenStringMap(utils.FlattenResourceList(in.Limits))
 	att["over_commit_guest_overhead"] = in.OvercommitGuestOverhead
