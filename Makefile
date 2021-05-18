@@ -49,8 +49,7 @@ test-acc: test-fmt
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
 
 functest:
-	export KUBECONFIG=$(sh -c "cluster-up/kubeconfig.sh")
-	go test ./ci-tests/... -timeout 99999s
+	@sh -c "'$(CURDIR)/scripts/func-test.sh'"
 
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
