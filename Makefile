@@ -11,15 +11,24 @@ else
 	DESTINATION=$(HOME)/.terraform.d/plugins/$(GOOS)_$(GOARCH)
 endif
 
+export BIN_DIR=$(CURDIR)/build/_output/bin
+export GOROOT=$(BIN_DIR)/go
+export GOBIN=$(GOROOT)/bin
+export GO=$(GOBIN)/go
+export GOFMT=$(GOBIN)/gofmt
+
 all: test install
+
+$(GO):
+	scripts/install-go.sh $(BIN_DIR)
 
 clean:
 	go clean
 	@echo "==> Removing $(DESTINATION) directory"
 	@rm -rf $(DESTINATION)
 
-build: test-fmt
-	go build
+build: $(GO) test-fmt
+	$(GO) build
 
 install: build
 	@echo "==> Installing plugin to $(DESTINATION)"
@@ -29,9 +38,9 @@ install: build
 test-fmt:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
-test-vet:
+test-vet: $(GO)
 	@echo "go vet ."
-	go vet $$(go list ./... | grep -v vendor/)
+	$(GO) vet $$(go list ./... | grep -v vendor/)
 	@if [ $$? -eq 1 ]; then \
 		echo ""; \
 		echo "Vet found suspicious constructs. Please check the reported constructs"; \
@@ -39,16 +48,16 @@ test-vet:
 		exit 1; \
 	fi
 
-fmt:
-	gofmt -w $(GOFMT_FILES)
+fmt: $(GO)
+	$(GOFMT) -w $(GOFMT_FILES)
 
-test: test-fmt
-	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
+test: $(GO) test-fmt
+	echo $(TEST) | xargs -t -n4 $(GO) test $(TESTARGS) -timeout=30s -parallel=4
 
-test-acc: test-fmt
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+test-acc: $(GO) test-fmt
+	TF_ACC=1 $(GO) test $(TEST) -v $(TESTARGS) -timeout 120m
 
-functest:
+functest: $(GO)
 	@sh -c "'$(CURDIR)/scripts/func-test.sh'"
 
 errcheck:
