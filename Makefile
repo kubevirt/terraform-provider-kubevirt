@@ -22,6 +22,9 @@ all: test install
 $(GO):
 	scripts/install-go.sh $(BIN_DIR)
 
+test-tools: $(GO)
+	scripts/install-test-tools.sh
+
 clean:
 	go clean
 	@echo "==> Removing $(DESTINATION) directory"
@@ -57,7 +60,7 @@ test: $(GO) test-fmt
 test-acc: $(GO) test-fmt
 	TF_ACC=1 $(GO) test $(TEST) -v $(TESTARGS) -timeout 120m
 
-functest: $(GO)
+functest: test-tools
 	@sh -c "'$(CURDIR)/scripts/func-test.sh'"
 
 errcheck:
