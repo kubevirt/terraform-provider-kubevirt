@@ -23,6 +23,7 @@ $(GO):
 	scripts/install-go.sh $(BIN_DIR)
 
 test-tools: $(GO)
+	scripts/install-terraform.sh $(BIN_DIR)
 	scripts/install-test-tools.sh
 
 clean:
@@ -61,6 +62,7 @@ test-acc: $(GO) test-fmt
 	TF_ACC=1 $(GO) test $(TEST) -v $(TESTARGS) -timeout 120m
 
 functest: test-tools
+	export PATH=$(BIN_DIR)/$(PATH)
 	@sh -c "'$(CURDIR)/scripts/func-test.sh'"
 
 errcheck:
