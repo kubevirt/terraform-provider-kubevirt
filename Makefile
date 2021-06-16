@@ -1,37 +1,45 @@
-TEST?=$$(go list ./... | grep -v 'vendor' | grep -v ci-tests)
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=kubevirt
-
-GOOS=$(shell go env GOOS)
-GOARCH=$(shell go env GOARCH)
 ifeq ($(OS),Windows_NT)  # is Windows_NT on XP, 2000, 7, Vista, 10...
-	DESTINATION=$(APPDATA)/terraform.d/plugins/$(GOOS)_$(GOARCH)
+	DESTINATION_PREFIX=$(APPDATA)/terraform.d/plugins
 else
-	DESTINATION=$(HOME)/.terraform.d/plugins/$(GOOS)_$(GOARCH)
+	DESTINATION_PREFIX=$(HOME)/.terraform.d/plugins
 endif
+
+export BIN_DIR=$(CURDIR)/build/_output/bin
+export GOROOT=$(BIN_DIR)/go
+export GOBIN=$(GOROOT)/bin
+export GO=$(GOBIN)/go
+export GOFMT=$(GOBIN)/gofmt
 
 all: test install
 
-clean:
-	go clean
-	@echo "==> Removing $(DESTINATION) directory"
-	@rm -rf $(DESTINATION)
+$(GO):
+	scripts/install-go.sh $(BIN_DIR)
 
-build: test-fmt
-	go build
+test-tools: $(GO)
+	scripts/install-terraform.sh $(BIN_DIR)
 
-install: build
-	@echo "==> Installing plugin to $(DESTINATION)"
-	@mkdir -p $(DESTINATION)
-	@cp ./terraform-provider-kubevirt $(DESTINATION)
+clean: $(GO)
+	$(GO) clean
+	@echo "==> Removing $(DESTINATION_PREFIX)/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH) directory"
+	@rm -rf $(DESTINATION_PREFIX)/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)
+
+build: $(GO) test-fmt
+	$(GO) build
+
+install: build $(GO)
+	@echo "==> Installing plugin to $(DESTINATION_PREFIX)/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)"
+	@mkdir -p $(DESTINATION_PREFIX)/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)
+	@cp ./terraform-provider-kubevirt $(DESTINATION_PREFIX)/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)
 
 test-fmt:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
-test-vet:
+test-vet: $(GO)
 	@echo "go vet ."
-	go vet $$(go list ./... | grep -v vendor/)
+	$(GO) vet $$($(GO) list ./... | grep -v vendor/)
 	@if [ $$? -eq 1 ]; then \
 		echo ""; \
 		echo "Vet found suspicious constructs. Please check the reported constructs"; \
@@ -39,28 +47,18 @@ test-vet:
 		exit 1; \
 	fi
 
-fmt:
-	gofmt -w $(GOFMT_FILES)
+fmt: $(GO)
+	$(GOFMT) -w $(GOFMT_FILES)
 
-test: test-fmt
-	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
+test: $(GO) test-fmt
+	$(GO) test ./kubevirt/... $(TESTARGS) -timeout=30s -parallel=4
 
-test-acc: test-fmt
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
-
-functest:
+functest: test-tools
+	export PATH=$(BIN_DIR)/$(PATH)
 	@sh -c "'$(CURDIR)/scripts/func-test.sh'"
 
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
-
-test-compile:
-	@if [ "$(TEST)" = "./..." ]; then \
-		echo "ERROR: Set TEST to a specific package. For example,"; \
-		echo "  make test-compile TEST=./$(PKG_NAME)"; \
-		exit 1; \
-	fi
-	go test -c $(TEST) $(TESTARGS)
 
 cluster-up:
 	sh -c "./cluster-up/up.sh" 
