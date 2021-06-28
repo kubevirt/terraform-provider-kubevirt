@@ -2,6 +2,8 @@
 
 set -ex
 
+make install
+
 make cluster-up	
 
 make functest
