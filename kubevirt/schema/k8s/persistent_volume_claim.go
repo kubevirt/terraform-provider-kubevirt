@@ -73,7 +73,7 @@ func persistentVolumeClaimSpecFields() map[string]*schema.Schema {
 		},
 		"volume_mode": {
 			Type:        schema.TypeString,
-			Description: "Volume mode by the claim, Filesystem or Block",
+			Description: "Volume mode requested by the claim, Filesystem or Block",
 			Optional:    true,
 			Computed:    true,
 			ForceNew:    true,
