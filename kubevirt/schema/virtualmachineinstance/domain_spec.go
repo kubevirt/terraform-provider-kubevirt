@@ -98,7 +98,7 @@ func domainSpecFields() map[string]*schema.Schema {
 					"interface": {
 						Type:        schema.TypeList,
 						Description: "Interfaces describe network interfaces which are added to the vmi.",
-						Required:    true,
+						Optional:    true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"name": {
