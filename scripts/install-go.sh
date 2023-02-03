@@ -2,7 +2,7 @@
 
 destination=$1
 version=$(grep "^go " go.mod |awk '{print $2}')
-tarball=go$version.linux-amd64.tar.gz
+tarball=go$version.darwin-amd64.tar.gz
 url=https://dl.google.com/go/
 
 mkdir -p $destination

@@ -3,3 +3,5 @@ terraform-provider-kubevirt
 _examples/**/.terraform
 _ci-configs
 build/_output
+_examples/
+.vscode/

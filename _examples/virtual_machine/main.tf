@@ -1,6 +1,7 @@
 provider "kubevirt" {
 }
 provider "kubernetes" {
+  
 }
 
 resource "kubevirt_virtual_machine" "virtual_machine" {

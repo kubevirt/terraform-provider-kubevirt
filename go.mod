@@ -1,6 +1,6 @@
 module github.com/kubevirt/terraform-provider-kubevirt
 
-go 1.14
+go 1.16
 
 require (
 	github.com/Azure/go-autorest/autorest v0.11.3 // indirect
