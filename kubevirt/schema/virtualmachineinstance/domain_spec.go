@@ -11,6 +11,21 @@ import (
 
 func domainSpecFields() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"machine": {
+			Type:        schema.TypeList,
+			Description: "Machine describes the Compute Resources required by this vmi.",
+			MaxItems:    1,
+			Required:    true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"type": {
+						Type:        schema.TypeString,
+						Description: "Type is a description of the initial vmi resources.",
+						Optional:    true,
+					},
+				},
+			},
+		},
 		"resources": {
 			Type:        schema.TypeList,
 			Description: "Resources describes the Compute Resources required by this vmi.",
@@ -105,6 +120,11 @@ func domainSpecFields() map[string]*schema.Schema {
 									Type:        schema.TypeString,
 									Description: "Logical name of the interface as well as a reference to the associated networks.",
 									Required:    true,
+								},
+								"model": {
+									Type:        schema.TypeString,
+									Description: "Interface model of the interface as well as a reference to the associated networks.",
+									Optional:    true,
 								},
 								"interface_binding_method": {
 									Type: schema.TypeString,
@@ -293,6 +313,9 @@ func expandInterfaces(interfaces []interface{}) []kubevirtapiv1.Interface {
 		if v, ok := in["name"].(string); ok {
 			result[i].Name = v
 		}
+		if v, ok := in["model"].(string); ok {
+			result[i].Model = v
+		}
 		if v, ok := in["interface_binding_method"].(string); ok {
 			result[i].InterfaceBindingMethod = expandInterfaceBindingMethod(v)
 		}
@@ -320,9 +343,17 @@ func expandInterfaceBindingMethod(interfaceBindingMethod string) kubevirtapiv1.I
 
 func flattenDomainSpec(in kubevirtapiv1.DomainSpec) []interface{} {
 	att := make(map[string]interface{})
-
+	att["machine"] = flattenMachine(in.Machine)
 	att["resources"] = flattenResources(in.Resources)
 	att["devices"] = flattenDevices(in.Devices)
+
+	return []interface{}{att}
+}
+
+func flattenMachine(in kubevirtapiv1.Machine) []interface{} {
+	att := make(map[string]interface{})
+
+	att["type"] = in.Type
 
 	return []interface{}{att}
 }
@@ -390,6 +421,10 @@ func flattenInterfaces(in []kubevirtapiv1.Interface) []interface{} {
 
 		c["name"] = v.Name
 		c["interface_binding_method"] = flattenInterfaceBindingMethod(v.InterfaceBindingMethod)
+		// switch v.InterfaceBindingMethod {
+		// 	case kubevirtapiv1.Interfac
+		// }
+		c["model"] = v.Model
 
 		att[i] = c
 	}

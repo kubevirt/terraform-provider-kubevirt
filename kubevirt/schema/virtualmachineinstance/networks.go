@@ -40,7 +40,7 @@ func networkFields() map[string]*schema.Schema {
 						Type:        schema.TypeList,
 						Description: "Multus network.",
 						// MaxItems:    1,
-						Optional:    true,
+						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"network_name": {
@@ -94,6 +94,7 @@ func expandNetworks(networks []interface{}) []kubevirtapiv1.Network {
 		if v, ok := in["network_source"].([]interface{}); ok {
 			result[i].NetworkSource = expandNetworkSource(v)
 		}
+		
 	}
 
 	return result

@@ -23,7 +23,7 @@ func DataVolumeTemplatesSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeList,
 		Description: fmt.Sprintf("dataVolumeTemplates is a list of dataVolumes that the VirtualMachineInstance template can reference."),
-		Required:    true,
+		Optional:    true,
 		Elem: &schema.Resource{
 			Schema: fields,
 		},
