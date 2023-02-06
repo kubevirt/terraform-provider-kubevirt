@@ -39,7 +39,7 @@ func networkFields() map[string]*schema.Schema {
 					"multus": {
 						Type:        schema.TypeList,
 						Description: "Multus network.",
-						MaxItems:    1,
+						// MaxItems:    1,
 						Optional:    true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
@@ -122,7 +122,7 @@ func expandPodNetwork(pod []interface{}) *kubevirtapiv1.PodNetwork {
 	result := &kubevirtapiv1.PodNetwork{}
 
 	if len(pod) == 0 || pod[0] == nil {
-		return result
+		return nil
 	}
 
 	in := pod[0].(map[string]interface{})
