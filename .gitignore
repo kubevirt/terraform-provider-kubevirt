@@ -3,8 +3,15 @@ terraform-provider-kubevirt
 _examples/**/.terraform
 _ci-configs
 build/_output
-_examples/
+_examples2/
 .vscode/
 *.zip
 .vscode/
 dist/
+
+.terraform.lock.hcl
+terraform.tfvars
+kubernetes.tf
+*.tfstate
+*.backup
+_examples3/
