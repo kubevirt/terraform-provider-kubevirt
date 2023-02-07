@@ -44,6 +44,13 @@ type Client interface {
 	UpdateVirtualMachine(namespace string, name string, vm *kubevirtapiv1.VirtualMachine, data []byte) error
 	DeleteVirtualMachine(namespace string, name string) error
 
+	// VirtualMachine CRUD operations
+
+	CreateVirtualMachineInstance(vm *kubevirtapiv1.VirtualMachineInstance) error
+	GetVirtualMachineInstance(namespace string, name string) (*kubevirtapiv1.VirtualMachineInstance, error)
+	UpdateVirtualMachineInstance(namespace string, name string, vm *kubevirtapiv1.VirtualMachineInstance, data []byte) error
+	DeleteVirtualMachineInstance(namespace string, name string) error
+
 	// DataVolume CRUD operations
 
 	CreateDataVolume(vm *cdiv1.DataVolume) error
@@ -118,6 +125,59 @@ func vmRes() schema.GroupVersionResource {
 		Group:    kubevirtapiv1.GroupVersion.Group,
 		Version:  kubevirtapiv1.GroupVersion.Version,
 		Resource: "virtualmachines",
+	}
+
+}
+
+// VirtualMachine CRUD operations
+
+func (c *client) CreateVirtualMachineInstance(vminstnace *kubevirtapiv1.VirtualMachineInstance) error {
+	vmiUpdateTypeMeta(vminstnace)
+	return c.createResource(vminstnace, vminstnace.Namespace, vmiRes())
+}
+
+func (c *client) GetVirtualMachineInstance(namespace string, name string) (*kubevirtapiv1.VirtualMachineInstance, error) {
+	var vmi kubevirtapiv1.VirtualMachineInstance
+	resp, err := c.getResource(namespace, name, vmRes())
+	if err != nil {
+		if errors.IsNotFound(err) {
+			log.Printf("[Warning] VirtualMachineInstance %s not found (namespace=%s)", name, namespace)
+			return nil, err
+		}
+		msg := fmt.Sprintf("Failed to get VirtualMachineInstance, with error: %v", err)
+		log.Printf("[Error] %s", msg)
+		return nil, fmt.Errorf(msg)
+	}
+	unstructured := resp.UnstructuredContent()
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured, &vmi); err != nil {
+		msg := fmt.Sprintf("Failed to translate unstructed to VirtualMachineInstance, with error: %v", err)
+		log.Printf("[Error] %s", msg)
+		return nil, fmt.Errorf(msg)
+	}
+	return &vmi, nil
+}
+
+func (c *client) UpdateVirtualMachineInstance(namespace string, name string, vmi *kubevirtapiv1.VirtualMachineInstance, data []byte) error {
+	vmiUpdateTypeMeta(vmi)
+	return c.updateResource(namespace, name, vmiRes(), vmi, data)
+}
+
+func (c *client) DeleteVirtualMachineInstance(namespace string, name string) error {
+	return c.deleteResource(namespace, name, vmiRes())
+}
+
+func vmiUpdateTypeMeta(vm *kubevirtapiv1.VirtualMachineInstance) {
+	vm.TypeMeta = metav1.TypeMeta{
+		Kind:       "VirtualMachineInstance",
+		APIVersion: kubevirtapiv1.GroupVersion.String(),
+	}
+}
+
+func vmiRes() schema.GroupVersionResource {
+	return schema.GroupVersionResource{
+		Group:    kubevirtapiv1.GroupVersion.Group,
+		Version:  kubevirtapiv1.GroupVersion.Version,
+		Resource: "virtualmachineinstances",
 	}
 
 }
