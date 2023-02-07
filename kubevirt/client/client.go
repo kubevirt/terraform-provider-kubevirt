@@ -44,12 +44,19 @@ type Client interface {
 	UpdateVirtualMachine(namespace string, name string, vm *kubevirtapiv1.VirtualMachine, data []byte) error
 	DeleteVirtualMachine(namespace string, name string) error
 
-	// VirtualMachine CRUD operations
+	// VirtualMachineInstance CRUD operations
 
 	CreateVirtualMachineInstance(vmi *kubevirtapiv1.VirtualMachineInstance) error
 	GetVirtualMachineInstance(namespace string, name string) (*kubevirtapiv1.VirtualMachineInstance, error)
 	UpdateVirtualMachineInstance(namespace string, name string, vmi *kubevirtapiv1.VirtualMachineInstance, data []byte) error
 	DeleteVirtualMachineInstance(namespace string, name string) error
+
+	// VirtualMachineInstanceReplicaSet CRUD operations
+
+	CreateVirtualMachineInstanceReplicaSet(vmirs *kubevirtapiv1.VirtualMachineInstance) error
+	GetVirtualMachineInstanceReplicaSet(namespace string, name string) (*kubevirtapiv1.VirtualMachineInstance, error)
+	UpdateVirtualMachineInstanceReplicaSet(namespace string, name string, vmirs *kubevirtapiv1.VirtualMachineInstance, data []byte) error
+	DeleteVirtualMachineInstanceReplicaSet(namespace string, name string) error
 
 	// DataVolume CRUD operations
 
@@ -129,7 +136,58 @@ func vmRes() schema.GroupVersionResource {
 
 }
 
-// VirtualMachine CRUD operations
+// VirtualMachineInstanceReplicaSet CRUD operations
+
+// CreateVirtualMachineInstanceReplicaSet implements Client
+func (c *client) CreateVirtualMachineInstanceReplicaSet(vmirs *kubevirtapiv1.VirtualMachineInstance) error {
+
+	return c.createResource(vmirs, vmirs.Namespace, vmirsRes())
+}
+
+// DeleteVirtualMachineInstanceReplicaSet implements Client
+func (c *client) DeleteVirtualMachineInstanceReplicaSet(namespace string, name string) error {
+	return c.deleteResource(namespace, name, vmirsRes())
+}
+
+// GetVirtualMachineInstanceReplicaSet implements Client
+func (c *client) GetVirtualMachineInstanceReplicaSet(namespace string, name string) (*kubevirtapiv1.VirtualMachineInstance, error) {
+	var vmirs kubevirtapiv1.VirtualMachineInstance
+	resp, err := c.getResource(namespace, name, vmirsRes())
+	if err != nil {
+		return nil, err
+	}
+	unstructured := resp.UnstructuredContent()
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured, &vmirs); err != nil {
+		msg := fmt.Sprintf("Failed to translate unstructed to VirtualMachineInstanceReplicaSet, with error: %v", err)
+		log.Printf("[Error] %s", msg)
+		return nil, fmt.Errorf(msg)
+	}
+	return &vmirs, nil
+}
+
+// UpdateVirtualMachineInstanceReplicaSet implements Client
+func (c *client) UpdateVirtualMachineInstanceReplicaSet(namespace string, name string, vmirs *kubevirtapiv1.VirtualMachineInstance, data []byte) error {
+	vmirsUpdateTypeMeta(vmirs)
+	return c.updateResource(namespace, name, vmirsRes(), vmirs, data)
+}
+
+func vmirsUpdateTypeMeta(vm *kubevirtapiv1.VirtualMachineInstance) {
+	vm.TypeMeta = metav1.TypeMeta{
+		Kind:       "VirtualMachineInstanceReplicaSet",
+		APIVersion: kubevirtapiv1.GroupVersion.String(),
+	}
+}
+
+func vmirsRes() schema.GroupVersionResource {
+	return schema.GroupVersionResource{
+		Group:    kubevirtapiv1.GroupVersion.Group,
+		Version:  kubevirtapiv1.GroupVersion.Version,
+		Resource: "virtualmachineinstancereplicaset",
+	}
+
+}
+
+// VirtualMachineInstance CRUD operations
 
 func (c *client) CreateVirtualMachineInstance(vminstnace *kubevirtapiv1.VirtualMachineInstance) error {
 	vmiUpdateTypeMeta(vminstnace)

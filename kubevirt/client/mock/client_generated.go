@@ -148,6 +148,63 @@ func (mr *MockClientMockRecorder) DeleteVirtualMachineInstance(namespace, name i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVirtualMachineInstance", reflect.TypeOf((*MockClient)(nil).DeleteVirtualMachineInstance), namespace, name)
 }
 
+// CreateVirtualMachineInstanceReplicaSet mocks base method
+func (m *MockClient) CreateVirtualMachineInstanceReplicaSet(vmirs *v1.VirtualMachineInstance) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateVirtualMachineInstanceReplicaSet", vmirs)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateVirtualMachineInstanceReplicaSet indicates an expected call of CreateVirtualMachineInstanceReplicaSet
+func (mr *MockClientMockRecorder) CreateVirtualMachineInstanceReplicaSet(vmirs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateVirtualMachineInstanceReplicaSet", reflect.TypeOf((*MockClient)(nil).CreateVirtualMachineInstanceReplicaSet), vmirs)
+}
+
+// GetVirtualMachineInstanceReplicaSet mocks base method
+func (m *MockClient) GetVirtualMachineInstanceReplicaSet(namespace, name string) (*v1.VirtualMachineInstance, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetVirtualMachineInstanceReplicaSet", namespace, name)
+	ret0, _ := ret[0].(*v1.VirtualMachineInstance)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVirtualMachineInstanceReplicaSet indicates an expected call of GetVirtualMachineInstanceReplicaSet
+func (mr *MockClientMockRecorder) GetVirtualMachineInstanceReplicaSet(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVirtualMachineInstanceReplicaSet", reflect.TypeOf((*MockClient)(nil).GetVirtualMachineInstanceReplicaSet), namespace, name)
+}
+
+// UpdateVirtualMachineInstanceReplicaSet mocks base method
+func (m *MockClient) UpdateVirtualMachineInstanceReplicaSet(namespace, name string, vmirs *v1.VirtualMachineInstance, data []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateVirtualMachineInstanceReplicaSet", namespace, name, vmirs, data)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateVirtualMachineInstanceReplicaSet indicates an expected call of UpdateVirtualMachineInstanceReplicaSet
+func (mr *MockClientMockRecorder) UpdateVirtualMachineInstanceReplicaSet(namespace, name, vmirs, data interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateVirtualMachineInstanceReplicaSet", reflect.TypeOf((*MockClient)(nil).UpdateVirtualMachineInstanceReplicaSet), namespace, name, vmirs, data)
+}
+
+// DeleteVirtualMachineInstanceReplicaSet mocks base method
+func (m *MockClient) DeleteVirtualMachineInstanceReplicaSet(namespace, name string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteVirtualMachineInstanceReplicaSet", namespace, name)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteVirtualMachineInstanceReplicaSet indicates an expected call of DeleteVirtualMachineInstanceReplicaSet
+func (mr *MockClientMockRecorder) DeleteVirtualMachineInstanceReplicaSet(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVirtualMachineInstanceReplicaSet", reflect.TypeOf((*MockClient)(nil).DeleteVirtualMachineInstanceReplicaSet), namespace, name)
+}
+
 // CreateDataVolume mocks base method
 func (m *MockClient) CreateDataVolume(vm *v1alpha1.DataVolume) error {
 	m.ctrl.T.Helper()
