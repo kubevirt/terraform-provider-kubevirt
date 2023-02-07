@@ -94,7 +94,7 @@ func expandNetworks(networks []interface{}) []kubevirtapiv1.Network {
 		if v, ok := in["network_source"].([]interface{}); ok {
 			result[i].NetworkSource = expandNetworkSource(v)
 		}
-		
+
 	}
 
 	return result

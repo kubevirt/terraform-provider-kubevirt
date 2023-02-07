@@ -79,7 +79,7 @@ func virtualMachineInstanceStatusFields() map[string]*schema.Schema {
 				},
 			},
 		},
-		"launcher_container_image_version" : {
+		"launcher_container_image_version": {
 			Type:        schema.TypeString,
 			Description: "LauncherContainerImageVersion indicates the version of the launcher container image.",
 			Optional:    true,

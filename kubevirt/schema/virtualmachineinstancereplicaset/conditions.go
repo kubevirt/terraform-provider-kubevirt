@@ -13,7 +13,7 @@ func virtualMachineInstanceReplicaSetConditionsFields() map[string]*schema.Schem
 	return map[string]*schema.Schema{
 		"type": {
 			Type:        schema.TypeString,
-			Description: "VirtualMachineConditionType represent the type of the VM as concluded from its VMi status.",
+			Description: "VirtualMachineInstanceReplicaSetConditionType represent the type of the VM as concluded from its VMi status.",
 			Optional:    true,
 			ValidateFunc: validation.StringInSlice([]string{
 				"Failure",
@@ -33,16 +33,16 @@ func virtualMachineInstanceReplicaSetConditionsFields() map[string]*schema.Schem
 			}, false),
 		},
 		// TODO nargaman -  Add following values
-		// "last_probe_time": {
-		// 	Type:        schema.TypeString,
-		// 	Description: "Last probe time.",
-		// 	Optional:    true,
-		// },
-		// "last_transition_time": {
-		// 	Type:        schema.TypeString,
-		// 	Description: "Last transition time.",
-		// 	Optional:    true,
-		// },
+		"last_probe_time": {
+			Type:        schema.TypeString,
+			Description: "Last probe time.",
+			Optional:    true,
+		},
+		"last_transition_time": {
+			Type:        schema.TypeString,
+			Description: "Last transition time.",
+			Optional:    true,
+		},
 		"reason": {
 			Type:        schema.TypeString,
 			Description: "Condition reason.",
@@ -71,8 +71,8 @@ func virtualMachineInstanceReplicaSetConditionsSchema() *schema.Schema {
 
 }
 
-func expandVirtualMachineInstanceReplicaSetConditions(conditions []interface{}) ([]kubevirtapiv1.VirtualMachineCondition, error) {
-	result := make([]kubevirtapiv1.VirtualMachineCondition, len(conditions))
+func expandVirtualMachineInstanceReplicaSetConditions(conditions []interface{}) ([]kubevirtapiv1.VirtualMachineInstanceReplicaSetCondition, error) {
+	result := make([]kubevirtapiv1.VirtualMachineInstanceReplicaSetCondition, len(conditions))
 
 	if len(conditions) == 0 || conditions[0] == nil {
 		return result, nil
@@ -82,7 +82,7 @@ func expandVirtualMachineInstanceReplicaSetConditions(conditions []interface{}) 
 		in := condition.(map[string]interface{})
 
 		if v, ok := in["type"].(string); ok {
-			result[i].Type = kubevirtapiv1.VirtualMachineConditionType(v)
+			result[i].Type = kubevirtapiv1.VirtualMachineInstanceReplicaSetConditionType(v)
 		}
 		if v, ok := in["status"].(string); ok {
 			result[i].Status = k8sv1.ConditionStatus(v)
@@ -98,7 +98,7 @@ func expandVirtualMachineInstanceReplicaSetConditions(conditions []interface{}) 
 	return result, nil
 }
 
-func flattenVirtualMachineInstanceReplicaSetConditions(in []kubevirtapiv1.VirtualMachineCondition) []interface{} {
+func flattenVirtualMachineInstanceReplicaSetConditions(in []kubevirtapiv1.VirtualMachineInstanceReplicaSetCondition) []interface{} {
 	att := make([]interface{}, len(in))
 
 	for i, v := range in {

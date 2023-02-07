@@ -9,18 +9,22 @@ import (
 
 func virtualMachineInstanceReplicaSetStatusFields() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"created": &schema.Schema{
-			Type:        schema.TypeBool,
-			Description: "Created indicates if the virtual machine is created in the cluster.",
-			Optional:    true,
+		"replicas": {
+			Type:        schema.TypeInt,
+			Description: "Number of replicas of the VirtualMachineInstanceReplicaSet.",
+			Computed:    true,
 		},
-		"ready": &schema.Schema{
-			Type:        schema.TypeBool,
-			Description: "Ready indicates if the virtual machine is running and ready.",
-			Optional:    true,
+		"ready_replicas": {
+			Type:        schema.TypeInt,
+			Description: "Number of ready replicas of the VirtualMachineInstanceReplicaSet.",
+			Computed:    true,
 		},
-		"conditions":            virtualMachineInstanceReplicaSetConditionsSchema(),
-		"state_change_requests": virtualMachineStateChangeRequestsSchema(),
+		"label_selector": {
+			Type:        schema.TypeString,
+			Description: "Label selector for pods.",
+			Computed:    true,
+		},
+		"conditions": virtualMachineInstanceReplicaSetConditionsSchema(),
 	}
 }
 
@@ -30,7 +34,7 @@ func virtualMachineInstanceReplicaSetStatusSchema() *schema.Schema {
 	return &schema.Schema{
 		Type: schema.TypeList,
 
-		Description: fmt.Sprintf("VirtualMachineStatus represents the status returned by the controller to describe how the VirtualMachine is doing."),
+		Description: fmt.Sprintf("VirtualMachineInstanceReplicaSetStatus represents the status returned by the controller to describe how the VirtualMachine is doing."),
 		Optional:    true,
 		MaxItems:    1,
 		Elem: &schema.Resource{
@@ -40,8 +44,8 @@ func virtualMachineInstanceReplicaSetStatusSchema() *schema.Schema {
 
 }
 
-func expandVirtualMachineInstanceReplicaSetStatus(virtualMachineStatus []interface{}) (kubevirtapiv1.VirtualMachineStatus, error) {
-	result := kubevirtapiv1.VirtualMachineStatus{}
+func expandVirtualMachineInstanceReplicaSetStatus(virtualMachineStatus []interface{}) (kubevirtapiv1.VirtualMachineInstanceReplicaSetStatus, error) {
+	result := kubevirtapiv1.VirtualMachineInstanceReplicaSetStatus{}
 
 	if len(virtualMachineStatus) == 0 || virtualMachineStatus[0] == nil {
 		return result, nil
@@ -49,12 +53,16 @@ func expandVirtualMachineInstanceReplicaSetStatus(virtualMachineStatus []interfa
 
 	in := virtualMachineStatus[0].(map[string]interface{})
 
-	if v, ok := in["created"].(bool); ok {
-		result.Created = v
+	if v, ok := in["replicas"].(int); ok {
+		result.Replicas = int32(v)
 	}
-	if v, ok := in["ready"].(bool); ok {
-		result.Ready = v
+	if v, ok := in["ready_replicas"].(int); ok {
+		result.ReadyReplicas = int32(v)
 	}
+	if v, ok := in["label_selector"].(string); ok {
+		result.LabelSelector = v
+	}
+
 	if v, ok := in["conditions"].([]interface{}); ok {
 		conditions, err := expandVirtualMachineInstanceReplicaSetConditions(v)
 		if err != nil {
@@ -62,20 +70,26 @@ func expandVirtualMachineInstanceReplicaSetStatus(virtualMachineStatus []interfa
 		}
 		result.Conditions = conditions
 	}
-	if v, ok := in["state_change_requests"].([]interface{}); ok {
-		result.StateChangeRequests = expandVirtualMachineStateChangeRequests(v)
-	}
 
 	return result, nil
 }
 
-func flattenVirtualMachineInstanceReplicaSetStatus(in kubevirtapiv1.VirtualMachineStatus) []interface{} {
+func flattenVirtualMachineInstanceReplicaSetStatus(in kubevirtapiv1.VirtualMachineInstanceReplicaSetStatus) []interface{} {
 	att := make(map[string]interface{})
 
-	att["created"] = in.Created
-	att["ready"] = in.Ready
+	if in.Replicas != 0 {
+		att["replicas"] = in.Replicas
+	}
+
+	if in.ReadyReplicas != 0 {
+		att["ready_replicas"] = in.ReadyReplicas
+	}
+
+	if in.LabelSelector != "" {
+		att["label_selector"] = in.LabelSelector
+	}
+
 	att["conditions"] = flattenVirtualMachineInstanceReplicaSetConditions(in.Conditions)
-	att["state_change_requests"] = flattenVirtualMachineStateChangeRequests(in.StateChangeRequests)
 
 	return []interface{}{att}
 }

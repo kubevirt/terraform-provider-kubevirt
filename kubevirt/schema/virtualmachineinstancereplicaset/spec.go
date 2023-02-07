@@ -4,28 +4,32 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/schema/datavolume"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/schema/virtualmachineinstance"
 	kubevirtapiv1 "kubevirt.io/client-go/api/v1"
 )
 
 func VirtualMachineInstanceReplicaSetSpecFields() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"run_strategy": {
-			Type:        schema.TypeString,
-			Description: "Running state indicates the requested running state of the VirtualMachineInstance, mutually exclusive with Running.",
-			Optional:    true,
-			ValidateFunc: validation.StringInSlice([]string{
-				"",
-				"Always",
-				"Halted",
-				"Manual",
-				"RerunOnFailure",
-			}, false),
+		"replicas": {
+			Type:        schema.TypeInt,
+			Required:    true,
+			Description: "Number of replicas of this virtual machine instance replica set.",
+			DefaultFunc: schema.EnvDefaultFunc("KUBEVIRT_REPLICAS", nil),
 		},
-		"template":              virtualmachineinstance.VirtualMachineInstanceTemplateSpecSchema(),
-		"data_volume_templates": datavolume.DataVolumeTemplatesSchema(),
+		"selector": {
+			Type:        schema.TypeList,
+			Required:    true,
+			MaxItems:    1,
+			Description: "Selector is a label query over a set of virtual machines. The result of matchLabels and matchExpressions are ANDed.",
+			Elem:        &schema.Resource{},
+		},
+		"template": virtualmachineinstance.VirtualMachineInstanceTemplateSpecSchema(),
+		"paused": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "If true, the virtual machine instance replica set will be paused.",
+			Default:     false,
+		},
 	}
 }
 
@@ -35,7 +39,7 @@ func virtualMachineInstanceReplicaSetSpecSchema() *schema.Schema {
 	return &schema.Schema{
 		Type: schema.TypeList,
 
-		Description: fmt.Sprintf("VirtualMachineSpec describes how the proper VirtualMachine should look like."),
+		Description: fmt.Sprintf("VirtualMachineInstanceReplicaSetSpec describes how the proper VirtualMachine should look like."),
 		Required:    true,
 		MaxItems:    1,
 		Elem: &schema.Resource{
@@ -45,8 +49,8 @@ func virtualMachineInstanceReplicaSetSpecSchema() *schema.Schema {
 
 }
 
-func expandVirtualMachineInstanceReplicaSetSpec(virtualMachine []interface{}) (kubevirtapiv1.VirtualMachineSpec, error) {
-	result := kubevirtapiv1.VirtualMachineSpec{}
+func expandVirtualMachineInstanceReplicaSetSpec(virtualMachine []interface{}) (kubevirtapiv1.VirtualMachineInstanceReplicaSetSpec, error) {
+	result := kubevirtapiv1.VirtualMachineInstanceReplicaSetSpec{}
 
 	if len(virtualMachine) == 0 || virtualMachine[0] == nil {
 		return result, nil
@@ -54,15 +58,14 @@ func expandVirtualMachineInstanceReplicaSetSpec(virtualMachine []interface{}) (k
 
 	in := virtualMachine[0].(map[string]interface{})
 
-	// if v, ok := in["running"].(bool); ok {
-	// 	result.Running = &v
-	// }
-	if v, ok := in["run_strategy"].(string); ok {
-		if v != "" {
-			runStrategy := kubevirtapiv1.VirtualMachineRunStrategy(v)
-			result.RunStrategy = &runStrategy
-		}
+	if v, ok := in["replicas"].(int32); ok {
+		result.Replicas = &v
 	}
+
+	if v, ok := in["paused"].(bool); ok {
+		result.Paused = v
+	}
+
 	if v, ok := in["template"].([]interface{}); ok {
 		template, err := virtualmachineinstance.ExpandVirtualMachineInstanceTemplateSpec(v)
 		if err != nil {
@@ -70,30 +73,22 @@ func expandVirtualMachineInstanceReplicaSetSpec(virtualMachine []interface{}) (k
 		}
 		result.Template = template
 	}
-	if v, ok := in["data_volume_templates"].([]interface{}); ok {
-		dataVolumeTemplates, err := datavolume.ExpandDataVolumeTemplates(v)
-		if err != nil {
-			return result, err
-		}
-		result.DataVolumeTemplates = dataVolumeTemplates
-	}
 
 	return result, nil
 }
 
-func flattenVirtualMachineInstanceReplicaSetSpec(in kubevirtapiv1.VirtualMachineSpec) []interface{} {
+func flattenVirtualMachineInstanceReplicaSetSpec(in kubevirtapiv1.VirtualMachineInstanceReplicaSetSpec) []interface{} {
 	att := make(map[string]interface{})
 
-	// if in.Running != nil {
-	// 	att["running"] = strconv.FormatBool(*in.Running)
-	// }
-	if in.RunStrategy != nil {
-		att["run_strategy"] = string(*in.RunStrategy)
+	if in.Replicas != nil {
+		att["replicas"] = *in.Replicas
 	}
+
+	att["paused"] = in.Paused
+
 	if in.Template != nil {
 		att["template"] = virtualmachineinstance.FlattenVirtualMachineInstanceTemplateSpec(*in.Template)
 	}
-	att["data_volume_templates"] = datavolume.FlattenDataVolumeTemplates(in.DataVolumeTemplates)
 
 	return []interface{}{att}
 }

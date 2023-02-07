@@ -9,20 +9,20 @@ import (
 
 func VirtualMachineReplicaSetFields() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"metadata": k8s.NamespacedMetadataSchema("VirtualMachine", false),
+		"metadata": k8s.NamespacedMetadataSchema("VirtualMachineInstanceReplicaSet", false),
 		"spec":     virtualMachineInstanceReplicaSetSpecSchema(),
 		"status":   virtualMachineInstanceReplicaSetStatusSchema(),
 	}
 }
 
-func ExpandVirtualMachineInstanceReplicaSet(virtualMachine []interface{}) (*kubevirtapiv1.VirtualMachine, error) {
-	result := &kubevirtapiv1.VirtualMachine{}
+func ExpandVirtualMachineInstanceReplicaSet(virtualMachineReplicaSet []interface{}) (*kubevirtapiv1.VirtualMachineInstanceReplicaSet, error) {
+	result := &kubevirtapiv1.VirtualMachineInstanceReplicaSet{}
 
-	if len(virtualMachine) == 0 || virtualMachine[0] == nil {
+	if len(virtualMachineReplicaSet) == 0 || virtualMachineReplicaSet[0] == nil {
 		return result, nil
 	}
 
-	in := virtualMachine[0].(map[string]interface{})
+	in := virtualMachineReplicaSet[0].(map[string]interface{})
 
 	if v, ok := in["metadata"].([]interface{}); ok {
 		result.ObjectMeta = k8s.ExpandMetadata(v)
@@ -45,7 +45,7 @@ func ExpandVirtualMachineInstanceReplicaSet(virtualMachine []interface{}) (*kube
 	return result, nil
 }
 
-func FlattenVirtualMachineInstanceReplicaSet(in kubevirtapiv1.VirtualMachine) []interface{} {
+func FlattenVirtualMachineInstanceReplicaSet(in kubevirtapiv1.VirtualMachineInstanceReplicaSet) []interface{} {
 	att := make(map[string]interface{})
 
 	att["metadata"] = k8s.FlattenMetadata(in.ObjectMeta)
@@ -55,8 +55,8 @@ func FlattenVirtualMachineInstanceReplicaSet(in kubevirtapiv1.VirtualMachine) []
 	return []interface{}{att}
 }
 
-func FromResourceData(resourceData *schema.ResourceData) (*kubevirtapiv1.VirtualMachine, error) {
-	result := &kubevirtapiv1.VirtualMachine{}
+func FromResourceData(resourceData *schema.ResourceData) (*kubevirtapiv1.VirtualMachineInstanceReplicaSet, error) {
+	result := &kubevirtapiv1.VirtualMachineInstanceReplicaSet{}
 
 	result.ObjectMeta = k8s.ExpandMetadata(resourceData.Get("metadata").([]interface{}))
 	spec, err := expandVirtualMachineInstanceReplicaSetSpec(resourceData.Get("spec").([]interface{}))
@@ -73,7 +73,7 @@ func FromResourceData(resourceData *schema.ResourceData) (*kubevirtapiv1.Virtual
 	return result, nil
 }
 
-func ToResourceData(vm kubevirtapiv1.VirtualMachine, resourceData *schema.ResourceData) error {
+func ToResourceData(vm kubevirtapiv1.VirtualMachineInstanceReplicaSet, resourceData *schema.ResourceData) error {
 	if err := resourceData.Set("metadata", k8s.FlattenMetadata(vm.ObjectMeta)); err != nil {
 		return err
 	}
