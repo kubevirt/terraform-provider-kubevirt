@@ -92,17 +92,17 @@ func (mr *MockClientMockRecorder) DeleteVirtualMachine(namespace, name interface
 }
 
 // CreateVirtualMachineInstance mocks base method
-func (m *MockClient) CreateVirtualMachineInstance(vm *v1.VirtualMachineInstance) error {
+func (m *MockClient) CreateVirtualMachineInstance(vmi *v1.VirtualMachineInstance) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateVirtualMachineInstance", vm)
+	ret := m.ctrl.Call(m, "CreateVirtualMachineInstance", vmi)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateVirtualMachineInstance indicates an expected call of CreateVirtualMachineInstance
-func (mr *MockClientMockRecorder) CreateVirtualMachineInstance(vm interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) CreateVirtualMachineInstance(vmi interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateVirtualMachineInstance", reflect.TypeOf((*MockClient)(nil).CreateVirtualMachineInstance), vm)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateVirtualMachineInstance", reflect.TypeOf((*MockClient)(nil).CreateVirtualMachineInstance), vmi)
 }
 
 // GetVirtualMachineInstance mocks base method
@@ -121,17 +121,17 @@ func (mr *MockClientMockRecorder) GetVirtualMachineInstance(namespace, name inte
 }
 
 // UpdateVirtualMachineInstance mocks base method
-func (m *MockClient) UpdateVirtualMachineInstance(namespace, name string, vm *v1.VirtualMachineInstance, data []byte) error {
+func (m *MockClient) UpdateVirtualMachineInstance(namespace, name string, vmi *v1.VirtualMachineInstance, data []byte) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateVirtualMachineInstance", namespace, name, vm, data)
+	ret := m.ctrl.Call(m, "UpdateVirtualMachineInstance", namespace, name, vmi, data)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateVirtualMachineInstance indicates an expected call of UpdateVirtualMachineInstance
-func (mr *MockClientMockRecorder) UpdateVirtualMachineInstance(namespace, name, vm, data interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) UpdateVirtualMachineInstance(namespace, name, vmi, data interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateVirtualMachineInstance", reflect.TypeOf((*MockClient)(nil).UpdateVirtualMachineInstance), namespace, name, vm, data)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateVirtualMachineInstance", reflect.TypeOf((*MockClient)(nil).UpdateVirtualMachineInstance), namespace, name, vmi, data)
 }
 
 // DeleteVirtualMachineInstance mocks base method

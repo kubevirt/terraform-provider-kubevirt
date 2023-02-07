@@ -46,9 +46,9 @@ type Client interface {
 
 	// VirtualMachine CRUD operations
 
-	CreateVirtualMachineInstance(vm *kubevirtapiv1.VirtualMachineInstance) error
+	CreateVirtualMachineInstance(vmi *kubevirtapiv1.VirtualMachineInstance) error
 	GetVirtualMachineInstance(namespace string, name string) (*kubevirtapiv1.VirtualMachineInstance, error)
-	UpdateVirtualMachineInstance(namespace string, name string, vm *kubevirtapiv1.VirtualMachineInstance, data []byte) error
+	UpdateVirtualMachineInstance(namespace string, name string, vmi *kubevirtapiv1.VirtualMachineInstance, data []byte) error
 	DeleteVirtualMachineInstance(namespace string, name string) error
 
 	// DataVolume CRUD operations
