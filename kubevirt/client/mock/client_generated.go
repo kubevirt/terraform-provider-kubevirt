@@ -5,10 +5,11 @@
 package mock
 
 import (
-	gomock "github.com/golang/mock/gomock"
-	v1 "kubevirt.io/client-go/api/v1"
-	v1alpha1 "kubevirt.io/containerized-data-importer/pkg/apis/core/v1alpha1"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
+	v1 "kubevirt.io/api/core/v1"
+	v1alpha1 "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
 )
 
 // MockClient is a mock of Client interface

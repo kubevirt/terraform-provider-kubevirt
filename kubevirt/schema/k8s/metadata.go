@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/utils"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/utils/patch"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

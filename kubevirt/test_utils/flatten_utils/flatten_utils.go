@@ -1,17 +1,50 @@
 package flatten_utils
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	test_entities "github.com/kubevirt/terraform-provider-kubevirt/kubevirt/test_utils/entities"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/utils"
 
 	k8sv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	cdiv1 "kubevirt.io/containerized-data-importer/pkg/apis/core/v1alpha1"
+	cdiv1 "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
 
-	kubevirtapiv1 "kubevirt.io/client-go/api/v1"
+	kubevirtapiv1 "kubevirt.io/api/core/v1"
 )
+
+func getDataVolumeSpec() cdiv1.DataVolumeSpec {
+	return cdiv1.DataVolumeSpec{
+		Source: &cdiv1.DataVolumeSource{
+			HTTP: &cdiv1.DataVolumeSourceHTTP{
+				URL:           "https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2",
+				SecretRef:     "secret_ref",
+				CertConfigMap: "cert_config_map",
+			},
+			PVC: &cdiv1.DataVolumeSourcePVC{
+				Namespace: "namespace",
+				Name:      "name",
+			},
+		},
+		PVC: &k8sv1.PersistentVolumeClaimSpec{
+			AccessModes: []k8sv1.PersistentVolumeAccessMode{
+				"ReadWriteOnce",
+			},
+			Resources: k8sv1.ResourceRequirements{
+				Requests: k8sv1.ResourceList{
+					"storage": (func() resource.Quantity { res, _ := resource.ParseQuantity("10Gi"); return res })(),
+				},
+				Limits: k8sv1.ResourceList{
+					"storage": (func() resource.Quantity { res, _ := resource.ParseQuantity("20Gi"); return res })(),
+				},
+			},
+			Selector:         test_entities.LabelSelectorAPI,
+			VolumeName:       "volume_name",
+			StorageClassName: (func() *string { str := "standard"; return &str })(),
+		},
+		ContentType: cdiv1.DataVolumeContentType("content_type"),
+	}
+}
 
 func GetBaseInputForDataVolume() cdiv1.DataVolume {
 	return cdiv1.DataVolume{
@@ -20,36 +53,18 @@ func GetBaseInputForDataVolume() cdiv1.DataVolume {
 			Name:         "test-vm-bootvolume",
 			Namespace:    "tenantcluster",
 		},
-		Spec: cdiv1.DataVolumeSpec{
-			Source: cdiv1.DataVolumeSource{
-				HTTP: &cdiv1.DataVolumeSourceHTTP{
-					URL:           "https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2",
-					SecretRef:     "secret_ref",
-					CertConfigMap: "cert_config_map",
-				},
-				PVC: &cdiv1.DataVolumeSourcePVC{
-					Namespace: "namespace",
-					Name:      "name",
-				},
-			},
-			PVC: &k8sv1.PersistentVolumeClaimSpec{
-				AccessModes: []k8sv1.PersistentVolumeAccessMode{
-					"ReadWriteOnce",
-				},
-				Resources: k8sv1.ResourceRequirements{
-					Requests: k8sv1.ResourceList{
-						"storage": (func() resource.Quantity { res, _ := resource.ParseQuantity("10Gi"); return res })(),
-					},
-					Limits: k8sv1.ResourceList{
-						"storage": (func() resource.Quantity { res, _ := resource.ParseQuantity("20Gi"); return res })(),
-					},
-				},
-				Selector:         test_entities.LabelSelectorAPI,
-				VolumeName:       "volume_name",
-				StorageClassName: (func() *string { str := "standard"; return &str })(),
-			},
-			ContentType: cdiv1.DataVolumeContentType("content_type"),
+		Spec: getDataVolumeSpec(),
+	}
+}
+
+func GetBaseInputForDataVolumeTemplateSpec() kubevirtapiv1.DataVolumeTemplateSpec {
+	return kubevirtapiv1.DataVolumeTemplateSpec{
+		ObjectMeta: v1.ObjectMeta{
+			GenerateName: "generate_name",
+			Name:         "test-vm-bootvolume",
+			Namespace:    "tenantcluster",
 		},
+		Spec: getDataVolumeSpec(),
 	}
 }
 
@@ -128,8 +143,8 @@ func GetBaseInputForVirtualMachine() kubevirtapiv1.VirtualMachineSpec {
 			strategy := kubevirtapiv1.VirtualMachineRunStrategy("Always")
 			return &strategy
 		})(),
-		DataVolumeTemplates: []cdiv1.DataVolume{
-			GetBaseInputForDataVolume(),
+		DataVolumeTemplates: []kubevirtapiv1.DataVolumeTemplateSpec{
+			GetBaseInputForDataVolumeTemplateSpec(),
 		},
 		Template: &kubevirtapiv1.VirtualMachineInstanceTemplateSpec{
 			ObjectMeta: v1.ObjectMeta{
@@ -280,7 +295,66 @@ func GetBaseInputForVirtualMachine() kubevirtapiv1.VirtualMachineSpec {
 func GetBaseOutputForVirtualMachine() interface{} {
 	return map[string]interface{}{
 		"data_volume_templates": []interface{}{
-			GetBaseOutputForDataVolume(),
+			map[string]interface{}{
+				"metadata": []interface{}{
+					map[string]interface{}{
+						"annotations":      interface{}(map[string]interface{}(nil)),
+						"labels":           interface{}(map[string]interface{}(nil)),
+						"name":             "test-vm-bootvolume",
+						"resource_version": interface{}(""),
+						"self_link":        interface{}(""),
+						"uid":              interface{}(""),
+						"generation":       interface{}(int64(0)),
+						"namespace":        "tenantcluster",
+						"generate_name":    "generate_name",
+					},
+				},
+				"spec": []interface{}{
+					map[string]interface{}{
+						"pvc": []interface{}{
+							map[string]interface{}{
+								"access_modes": (func() *schema.Set {
+									out := []interface{}{
+										"ReadWriteOnce",
+									}
+									return schema.NewSet(schema.HashString, out)
+								})(),
+								"resources": []interface{}{
+									map[string]interface{}{
+										"requests": map[string]interface{}{
+											"storage": "10Gi",
+										},
+										"limits": map[string]interface{}{
+											"storage": "20Gi",
+										},
+									},
+								},
+								"selector":           test_entities.LabelSelectorTerraform,
+								"volume_name":        "volume_name",
+								"storage_class_name": "standard",
+							},
+						},
+						"source": []interface{}{
+							map[string]interface{}{
+								"http": []interface{}{
+									map[string]interface{}{
+										"url":             "https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2",
+										"secret_ref":      "secret_ref",
+										"cert_config_map": "cert_config_map",
+									},
+								},
+								"pvc": []interface{}{
+									map[string]interface{}{
+										"namespace": "namespace",
+										"name":      "name",
+									},
+								},
+							},
+						},
+						"content_type": "content_type",
+					},
+				},
+			},
 		},
 		"run_strategy": "Always",
 		"template": []interface{}{
@@ -363,7 +437,7 @@ func GetBaseOutputForVirtualMachine() interface{} {
 													map[string]interface{}{
 														"disk": []interface{}{
 															map[string]interface{}{
-																"bus":         "virtio",
+																"bus":         kubevirtapiv1.DiskBus("virtio"),
 																"read_only":   true,
 																"pci_address": "pci_address",
 															},

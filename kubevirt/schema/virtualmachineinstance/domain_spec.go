@@ -3,10 +3,10 @@ package virtualmachineinstance
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/utils"
-	kubevirtapiv1 "kubevirt.io/client-go/api/v1"
+	kubevirtapiv1 "kubevirt.io/api/core/v1"
 )
 
 func domainSpecFields() map[string]*schema.Schema {
@@ -98,7 +98,7 @@ func domainSpecFields() map[string]*schema.Schema {
 					"interface": {
 						Type:        schema.TypeList,
 						Description: "Interfaces describe network interfaces which are added to the vmi.",
-						Required:    true,
+						Optional:    true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"name": {
@@ -268,7 +268,7 @@ func expandDiskTarget(disk []interface{}) *kubevirtapiv1.DiskTarget {
 	in := disk[0].(map[string]interface{})
 
 	if v, ok := in["bus"].(string); ok {
-		result.Bus = v
+		result.Bus = kubevirtapiv1.DiskBus(v)
 	}
 	if v, ok := in["read_only"].(bool); ok {
 		result.ReadOnly = v

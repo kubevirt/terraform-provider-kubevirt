@@ -30,8 +30,8 @@ import (
 	pkgApi "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 	restclient "k8s.io/client-go/rest"
-	kubevirtapiv1 "kubevirt.io/client-go/api/v1"
-	cdiv1 "kubevirt.io/containerized-data-importer/pkg/apis/core/v1alpha1"
+	kubevirtapiv1 "kubevirt.io/api/core/v1"
+	cdiv1 "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
 )
 
 //go:generate mockgen -source=./client.go -destination=./mock/client_generated.go -package=mock

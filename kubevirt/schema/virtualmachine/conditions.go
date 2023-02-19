@@ -3,10 +3,10 @@ package virtualmachine
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	k8sv1 "k8s.io/api/core/v1"
-	kubevirtapiv1 "kubevirt.io/client-go/api/v1"
+	kubevirtapiv1 "kubevirt.io/api/core/v1"
 )
 
 func virtualMachineConditionsFields() map[string]*schema.Schema {
