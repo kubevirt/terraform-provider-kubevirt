@@ -1,0 +1,83 @@
+#!/bin/bash
+
+set -e
+
+export KUBEVIRT_PROVIDER=${KUBEVIRT_PROVIDER:-k8s-1.23}
+export KUBEVIRTCI_TAG=${KUBEVIRTCI_TAG:-2205231118-f12b50e}
+export KUBEVIRT_DEPLOY_PROMETHEUS=false
+export KUBEVIRT_NUM_NODES=${KUBEVIRT_NUM_NODES:-1}
+export KUBEVIRT_MEMORY_SIZE=${KUBEVIRT_MEMORY_SIZE:-15360M}
+export KUBEVIRT_DEPLOY_CDI="true"
+
+_kubectl=cluster-up/cluster-up/kubectl.sh
+
+_action=$1
+shift
+
+
+function kubevirtci::usage() {
+	echo "Usage:
+
+	./kubevirtci <cammand>
+
+	Commands:
+
+	  up                                Start a cluster with kubevirt
+	  down                              Destroy the cluster
+	  kubeconfig                        Return the kubeconfig of the cluster
+	  kubectl <kubectl options>         Interact with the cluster
+
+	  help                              Print usage
+	"
+}
+
+function kubevirtci::kubeconfig() {
+	cluster-up/cluster-up/kubeconfig.sh
+}
+
+function kubevirtci::fetch_kubevirtci() {
+	[[ -d cluster-up ]] || git clone https://github.com/kubevirt/kubevirtci.git cluster-up
+	(cd cluster-up && git checkout main > /dev/null 2>&1 && git pull > /dev/null && git checkout ${KUBEVIRTCI_TAG} > /dev/null 2>&1)
+}
+
+function kubevirtci::up() {
+	make cluster-up -C cluster-up
+	export KUBECONFIG=$(cluster-up/cluster-up/kubeconfig.sh)
+	echo "installing kubevirt..."
+	LATEST=$(curl -L https://storage.googleapis.com/kubevirt-prow/devel/release/kubevirt/kubevirt/stable.txt)
+	${_kubectl} apply -f https://github.com/kubevirt/kubevirt/releases/download/${LATEST}/kubevirt-operator.yaml
+	${_kubectl} apply -f https://github.com/kubevirt/kubevirt/releases/download/${LATEST}/kubevirt-cr.yaml
+	echo "waiting for kubevirt to become ready, this can take a few minutes. You can safely abort this step, the cluster is ready ..."
+	${_kubectl} -n kubevirt wait kv kubevirt --for condition=Available --timeout=5m
+}
+
+function kubevirtci::down() {
+	make cluster-down -C cluster-up
+}
+
+
+kubevirtci::fetch_kubevirtci
+
+case ${_action} in
+"up")
+	kubevirtci::up
+	;;
+"down")
+	kubevirtci::down
+	;;
+"kubeconfig")
+	kubevirtci::kubeconfig
+	;;
+"kubectl")
+	${_kubectl} "$@"
+	;;
+"help")
+	kubevirtci::usage
+	;;
+*)
+	echo "Error: Unknown kubevirtci command"
+	echo ""
+	kubevirtci::usage
+	exit 1
+	;;
+esac
