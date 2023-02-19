@@ -1,16 +1,19 @@
-package exec
+package terraform
 
 import (
 	"regexp"
 
-	"github.com/pkg/errors"
-
-	"github.com/kubevirt/terraform-provider-kubevirt/ci-tests/terraform/exec/diagnostics"
+	"github.com/kubevirt/terraform-provider-kubevirt/ci-tests/terraform/diagnostics"
 )
 
-// Diagnose accepts an error from terraform runs and tries to diagnose the
+// diagnoseApplyError accepts an error from terraform runs and tries to diagnose the
 // underlying cause.
-func Diagnose(message string) error {
+func diagnoseApplyError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	message := err.Error()
 	for _, cand := range conditions {
 		if cand.match.MatchString(message) {
 			return &diagnostics.Err{
@@ -21,7 +24,7 @@ func Diagnose(message string) error {
 		}
 	}
 
-	return errors.New("failed to complete the change")
+	return err
 }
 
 type condition struct {
@@ -82,7 +85,7 @@ var conditions = []condition{{
 	match: regexp.MustCompile(`Error: could not contact Ironic API: timeout reached`),
 
 	reason:  "BaremetalIronicAPITimeout",
-	message: `Timed out waiting for provisioning service. This failure can be caused by misconfiguration or inability to download the machine operating system images. Please check the bootstrap host for failing services.`,
+	message: `Unable to the reach provisioning service. This failure can be caused by incorrect network/proxy settings, inability to download the machine operating system images, or other misconfiguration. Please check access to the bootstrap host, and for any failing services.`,
 }, {
 	match: regexp.MustCompile(`Error: could not inspect: could not inspect node, node is currently 'inspect failed', last error was 'timeout reached while inspecting the node'`),
 

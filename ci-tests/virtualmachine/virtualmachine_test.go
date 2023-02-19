@@ -7,15 +7,18 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/kubevirt/terraform-provider-kubevirt/ci-tests/common"
-	"github.com/kubevirt/terraform-provider-kubevirt/ci-tests/terraform/exec"
+	"github.com/kubevirt/terraform-provider-kubevirt/ci-tests/terraform"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/format"
 	"github.com/pborman/uuid"
-	cdiv1 "kubevirt.io/containerized-data-importer/pkg/apis/core/v1alpha1"
+	cdiv1 "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
 )
 
 func TestVirtualMachine(t *testing.T) {
+	format.MaxLength = 0
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Virtual Machine Suite")
 }
@@ -55,18 +58,26 @@ var _ = AfterSuite(func() {
 })
 
 var _ = Describe("Virtual Machine Test", func() {
+	testName := "virtualmachine"
+	tfExecPath := "terraform"
+	It("init", func() {
+		if err := terraform.Init(testDir, testName, tfExecPath); err != nil {
+			Fail(fmt.Sprintf("failed to init terraform (runDir: %s, testName: %s, terraform path: %s) , with error: %s", testDir, testName, tfExecPath, err))
+		}
+	})
 	It("create", func() {
 		data, err := json.MarshalIndent(vars, "", "  ")
 		if err != nil {
 			Fail(fmt.Sprintf("failed to get data for tfvars file, with error: %s", err))
 		}
-		tfVarFiles := []*exec.TfVarFile{
+		tfVarFiles := []*terraform.TfVarFile{
 			{
 				Filename: "terraform.auto.tfvars.json",
 				Data:     data,
 			},
 		}
-		if _, err = exec.Apply(testDir, "virtualmachine", tfVarFiles); err != nil {
+		var extraOpts []tfexec.ApplyOption
+		if err = terraform.Apply(testDir, tfExecPath, tfVarFiles, extraOpts...); err != nil {
 			Fail(fmt.Sprintf("failed to create virtual machine %s in namespace %s, with error: %s", vars.VMName, namespace, err))
 		}
 		common.ValidateVirtualMachine(vars.VMName, namespace, getExpectedVirtualMachine(vars.VMName, namespace, dvFromHttpSource, vars.Labels))
@@ -77,19 +88,21 @@ var _ = Describe("Virtual Machine Test", func() {
 		if err != nil {
 			Fail(fmt.Sprintf("failed to get data for tfvars file, with error: %s", err))
 		}
-		tfVarFiles := []*exec.TfVarFile{
+		tfVarFiles := []*terraform.TfVarFile{
 			{
 				Filename: "terraform.auto.tfvars.json",
 				Data:     data,
 			},
 		}
-		if _, err = exec.Apply(testDir, "virtualmachine", tfVarFiles); err != nil {
+		var extraOpts []tfexec.ApplyOption
+		if err = terraform.Apply(testDir, tfExecPath, tfVarFiles, extraOpts...); err != nil {
 			Fail(fmt.Sprintf("failed to update Virtual Machine %s in namespace %s, with error: %s", vars.VMName, namespace, err))
 		}
 		common.ValidateVirtualMachine(vars.VMName, namespace, getExpectedVirtualMachine(vars.VMName, namespace, dvFromHttpSource, vars.Labels))
 	})
 	It("delete", func() {
-		if err := exec.Destroy(testDir, "virtualmachine"); err != nil {
+		var extraOpts []tfexec.DestroyOption
+		if err := terraform.Destroy(testDir, tfExecPath, extraOpts...); err != nil {
 			Fail(fmt.Sprintf("failed to delete Virtual Machine %s in namespace %s, with error: %s", vars.VMName, namespace, err))
 		}
 		common.ValidateVirtualMachine(vars.VMName, namespace, nil)
