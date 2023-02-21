@@ -13,7 +13,7 @@ export GOBIN=$(GOROOT)/bin
 export GO=$(GOBIN)/go
 export GOFMT=$(GOBIN)/gofmt
 
-all: test install-local
+all: test install-local-provider
 
 $(GO):
 	scripts/install-go.sh $(BIN_DIR)
@@ -29,7 +29,7 @@ clean: $(GO)
 build: $(GO) test-fmt
 	$(GO) build
 
-install-local: build $(GO)
+install-local-provider: build $(GO)
 	@mkdir -p $(DESTINATION_PREFIX)/terraform.local/local/kubevirt/1.0.0/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)
 	@cp ./terraform-provider-kubevirt $(DESTINATION_PREFIX)/terraform.local/local/kubevirt/1.0.0/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)
 	@echo "==> Installing plugin to $(DESTINATION_PREFIX)/terraform.local/local/kubevirt/1.0.0/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)"
@@ -68,7 +68,7 @@ cluster-down:
 .PHONY: \
 	clean \
 	build \
-	install-local \
+	install-local-provider \
 	test-fmt \
 	test-vet \
 	fmt \

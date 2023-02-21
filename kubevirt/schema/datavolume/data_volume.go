@@ -1,8 +1,6 @@
 package datavolume
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/schema/k8s"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/utils/patch"
@@ -15,20 +13,6 @@ func DataVolumeFields() map[string]*schema.Schema {
 		"spec":     DataVolumeSpecSchema(),
 		"status":   dataVolumeStatusSchema(),
 	}
-}
-
-func DataVolumeTemplatesSchema() *schema.Schema {
-	fields := DataVolumeFields()
-
-	return &schema.Schema{
-		Type:        schema.TypeList,
-		Description: fmt.Sprintf("dataVolumeTemplates is a list of dataVolumes that the VirtualMachineInstance template can reference."),
-		Required:    true,
-		Elem: &schema.Resource{
-			Schema: fields,
-		},
-	}
-
 }
 
 func ExpandDataVolumeTemplates(dataVolumes []interface{}) ([]cdiv1.DataVolume, error) {

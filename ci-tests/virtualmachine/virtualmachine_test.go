@@ -60,12 +60,12 @@ var _ = AfterSuite(func() {
 var _ = Describe("Virtual Machine Test", func() {
 	testName := "virtualmachine"
 	tfExecPath := "terraform"
-	It("init", func() {
+	It("terraform init", func() {
 		if err := terraform.Init(testDir, testName, tfExecPath); err != nil {
 			Fail(fmt.Sprintf("failed to init terraform (runDir: %s, testName: %s, terraform path: %s) , with error: %s", testDir, testName, tfExecPath, err))
 		}
 	})
-	It("create", func() {
+	It("terraform apply (create new)", func() {
 		data, err := json.MarshalIndent(vars, "", "  ")
 		if err != nil {
 			Fail(fmt.Sprintf("failed to get data for tfvars file, with error: %s", err))
@@ -82,7 +82,7 @@ var _ = Describe("Virtual Machine Test", func() {
 		}
 		common.ValidateVirtualMachine(vars.VMName, namespace, getExpectedVirtualMachine(vars.VMName, namespace, dvFromHttpSource, vars.Labels))
 	})
-	It("update", func() {
+	It("terraform apply (update)", func() {
 		vars.Labels["key2"] = "value2"
 		data, err := json.MarshalIndent(vars, "", "  ")
 		if err != nil {
@@ -100,7 +100,7 @@ var _ = Describe("Virtual Machine Test", func() {
 		}
 		common.ValidateVirtualMachine(vars.VMName, namespace, getExpectedVirtualMachine(vars.VMName, namespace, dvFromHttpSource, vars.Labels))
 	})
-	It("delete", func() {
+	It("terraform destroy", func() {
 		var extraOpts []tfexec.DestroyOption
 		if err := terraform.Destroy(testDir, tfExecPath, extraOpts...); err != nil {
 			Fail(fmt.Sprintf("failed to delete Virtual Machine %s in namespace %s, with error: %s", vars.VMName, namespace, err))

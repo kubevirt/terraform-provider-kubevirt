@@ -2,7 +2,7 @@
 
 set -ex
 
-make install-local
+make install-local-provider
 
 make cluster-up	
 
