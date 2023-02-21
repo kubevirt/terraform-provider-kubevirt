@@ -14,8 +14,8 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	kubevirtapiv1 "kubevirt.io/client-go/api/v1"
-	cdiv1 "kubevirt.io/containerized-data-importer/pkg/apis/core/v1alpha1"
+	kubevirtapiv1 "kubevirt.io/api/core/v1"
+	cdiv1 "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
 )
 
 var (
@@ -90,6 +90,7 @@ func ValidateDatavolume(dvName string, namespace string, expectedDV *cdiv1.DataV
 			expectedDV.Annotations["cdi.kubevirt.io/cloneType"] = resultDV.Annotations["cdi.kubevirt.io/cloneType"]
 			expectedDV.Annotations["cdi.kubevirt.io/storage.clone.token"] = resultDV.Annotations["cdi.kubevirt.io/storage.clone.token"]
 		}
+		expectedDV.Status.Conditions = resultDV.Status.Conditions
 
 		resultDV.ManagedFields = nil
 	}

@@ -1,16 +1,16 @@
 package expand_utils
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	test_entities "github.com/kubevirt/terraform-provider-kubevirt/kubevirt/test_utils/entities"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/utils"
 
 	k8sv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	cdiv1 "kubevirt.io/containerized-data-importer/pkg/apis/core/v1alpha1"
+	cdiv1 "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
 
-	kubevirtapiv1 "kubevirt.io/client-go/api/v1"
+	kubevirtapiv1 "kubevirt.io/api/core/v1"
 )
 
 func GetBaseInputForDataVolume() interface{} {
@@ -65,6 +65,50 @@ func GetBaseInputForDataVolume() interface{} {
 	}
 }
 
+func getDataVolumeSpec() cdiv1.DataVolumeSpec {
+	return cdiv1.DataVolumeSpec{
+		Source: &cdiv1.DataVolumeSource{
+			HTTP: &cdiv1.DataVolumeSourceHTTP{
+				URL:           "https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2",
+				SecretRef:     "secret_ref",
+				CertConfigMap: "cert_config_map",
+			},
+			PVC: &cdiv1.DataVolumeSourcePVC{
+				Namespace: "namespace",
+				Name:      "name",
+			},
+		},
+		PVC: &k8sv1.PersistentVolumeClaimSpec{
+			AccessModes: []k8sv1.PersistentVolumeAccessMode{
+				"ReadWriteOnce",
+			},
+			Resources: k8sv1.ResourceRequirements{
+				Requests: k8sv1.ResourceList{
+					"storage": (func() resource.Quantity { res, _ := resource.ParseQuantity("10Gi"); return res })(),
+				},
+				Limits: k8sv1.ResourceList{
+					"storage": (func() resource.Quantity { res, _ := resource.ParseQuantity("20Gi"); return res })(),
+				},
+			},
+			Selector:         test_entities.LabelSelectorAPI,
+			VolumeName:       "volume_name",
+			StorageClassName: (func() *string { str := "standard"; return &str })(),
+		},
+		ContentType: cdiv1.DataVolumeContentType("content_type"),
+	}
+}
+
+func getBaseOutputForDataVolumeTemplateSpec() kubevirtapiv1.DataVolumeTemplateSpec {
+	return kubevirtapiv1.DataVolumeTemplateSpec{
+		ObjectMeta: v1.ObjectMeta{
+			GenerateName: "generate_name",
+			Name:         "test-vm-bootvolume",
+			Namespace:    "tenantcluster",
+		},
+		Spec: getDataVolumeSpec(),
+	}
+}
+
 func GetBaseOutputForDataVolume() cdiv1.DataVolume {
 	return cdiv1.DataVolume{
 		ObjectMeta: v1.ObjectMeta{
@@ -72,36 +116,7 @@ func GetBaseOutputForDataVolume() cdiv1.DataVolume {
 			Name:         "test-vm-bootvolume",
 			Namespace:    "tenantcluster",
 		},
-		Spec: cdiv1.DataVolumeSpec{
-			Source: cdiv1.DataVolumeSource{
-				HTTP: &cdiv1.DataVolumeSourceHTTP{
-					URL:           "https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2",
-					SecretRef:     "secret_ref",
-					CertConfigMap: "cert_config_map",
-				},
-				PVC: &cdiv1.DataVolumeSourcePVC{
-					Namespace: "namespace",
-					Name:      "name",
-				},
-			},
-			PVC: &k8sv1.PersistentVolumeClaimSpec{
-				AccessModes: []k8sv1.PersistentVolumeAccessMode{
-					"ReadWriteOnce",
-				},
-				Resources: k8sv1.ResourceRequirements{
-					Requests: k8sv1.ResourceList{
-						"storage": (func() resource.Quantity { res, _ := resource.ParseQuantity("10Gi"); return res })(),
-					},
-					Limits: k8sv1.ResourceList{
-						"storage": (func() resource.Quantity { res, _ := resource.ParseQuantity("20Gi"); return res })(),
-					},
-				},
-				Selector:         test_entities.LabelSelectorAPI,
-				VolumeName:       "volume_name",
-				StorageClassName: (func() *string { str := "standard"; return &str })(),
-			},
-			ContentType: cdiv1.DataVolumeContentType("content_type"),
-		},
+		Spec: getDataVolumeSpec(),
 	}
 }
 
@@ -292,8 +307,8 @@ func GetBaseOutputForVirtualMachine() kubevirtapiv1.VirtualMachineSpec {
 			strategy := kubevirtapiv1.VirtualMachineRunStrategy("Always")
 			return &strategy
 		})(),
-		DataVolumeTemplates: []cdiv1.DataVolume{
-			GetBaseOutputForDataVolume(),
+		DataVolumeTemplates: []kubevirtapiv1.DataVolumeTemplateSpec{
+			getBaseOutputForDataVolumeTemplateSpec(),
 		},
 		Template: &kubevirtapiv1.VirtualMachineInstanceTemplateSpec{
 			ObjectMeta: v1.ObjectMeta{

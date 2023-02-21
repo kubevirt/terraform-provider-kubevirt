@@ -7,9 +7,9 @@ import (
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/test_utils/flatten_utils"
 	"gotest.tools/assert"
 
-	cdiv1 "kubevirt.io/containerized-data-importer/pkg/apis/core/v1alpha1"
+	cdiv1 "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/test_utils"
 )
 

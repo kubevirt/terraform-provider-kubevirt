@@ -3,3 +3,4 @@ terraform-provider-kubevirt
 _examples/**/.terraform
 _ci-configs
 build/_output
+cluster-up

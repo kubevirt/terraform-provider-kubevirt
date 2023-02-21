@@ -3,18 +3,17 @@ package virtualmachine
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/schema/datavolume"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/schema/virtualmachineinstance"
-	kubevirtapiv1 "kubevirt.io/client-go/api/v1"
+	kubevirtapiv1 "kubevirt.io/api/core/v1"
 )
 
 func virtualMachineSpecFields() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		// "running": &schema.Schema{
 		// 	Type:        schema.TypeBool,
-		// 	Description: "Running controls whether the associatied VirtualMachineInstance is created or not, Mutually exclusive with RunStrategy",
+		// 	Description: "Running controls whether the associatied VirtualMachineInstance is created or not.",
 		// 	Optional:    true,
 		// },
 		"run_strategy": {
@@ -30,7 +29,7 @@ func virtualMachineSpecFields() map[string]*schema.Schema {
 			}, false),
 		},
 		"template":              virtualmachineinstance.VirtualMachineInstanceTemplateSpecSchema(),
-		"data_volume_templates": datavolume.DataVolumeTemplatesSchema(),
+		"data_volume_templates": dataVolumeTemplatesSchema(),
 	}
 }
 
@@ -76,7 +75,7 @@ func expandVirtualMachineSpec(virtualMachine []interface{}) (kubevirtapiv1.Virtu
 		result.Template = template
 	}
 	if v, ok := in["data_volume_templates"].([]interface{}); ok {
-		dataVolumeTemplates, err := datavolume.ExpandDataVolumeTemplates(v)
+		dataVolumeTemplates, err := expandDataVolumeTemplates(v)
 		if err != nil {
 			return result, err
 		}
@@ -98,7 +97,7 @@ func flattenVirtualMachineSpec(in kubevirtapiv1.VirtualMachineSpec) []interface{
 	if in.Template != nil {
 		att["template"] = virtualmachineinstance.FlattenVirtualMachineInstanceTemplateSpec(*in.Template)
 	}
-	att["data_volume_templates"] = datavolume.FlattenDataVolumeTemplates(in.DataVolumeTemplates)
+	att["data_volume_templates"] = flattenDataVolumeTemplates(in.DataVolumeTemplates)
 
 	return []interface{}{att}
 }

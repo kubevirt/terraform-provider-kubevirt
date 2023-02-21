@@ -3,8 +3,8 @@ package datavolume
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	cdiv1 "kubevirt.io/containerized-data-importer/pkg/apis/core/v1alpha1"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	cdiv1 "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
 )
 
 func dataVolumeSourceFields() map[string]*schema.Schema {
@@ -96,8 +96,8 @@ func dataVolumeSourcePVCSchema() *schema.Schema {
 
 // Expanders
 
-func expandDataVolumeSource(dataVolumeSource []interface{}) cdiv1.DataVolumeSource {
-	result := cdiv1.DataVolumeSource{}
+func expandDataVolumeSource(dataVolumeSource []interface{}) *cdiv1.DataVolumeSource {
+	result := &cdiv1.DataVolumeSource{}
 
 	if len(dataVolumeSource) == 0 || dataVolumeSource[0] == nil {
 		return result
@@ -154,7 +154,7 @@ func expandDataVolumeSourcePVC(dataVolumeSourcePVC []interface{}) *cdiv1.DataVol
 
 // Flatteners
 
-func flattenDataVolumeSource(in cdiv1.DataVolumeSource) []interface{} {
+func flattenDataVolumeSource(in *cdiv1.DataVolumeSource) []interface{} {
 	att := make(map[string]interface{})
 
 	if in.HTTP != nil {

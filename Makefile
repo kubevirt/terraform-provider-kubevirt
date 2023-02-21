@@ -13,7 +13,7 @@ export GOBIN=$(GOROOT)/bin
 export GO=$(GOBIN)/go
 export GOFMT=$(GOBIN)/gofmt
 
-all: test install
+all: test install-local-provider
 
 $(GO):
 	scripts/install-go.sh $(BIN_DIR)
@@ -29,10 +29,10 @@ clean: $(GO)
 build: $(GO) test-fmt
 	$(GO) build
 
-install: build $(GO)
-	@echo "==> Installing plugin to $(DESTINATION_PREFIX)/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)"
-	@mkdir -p $(DESTINATION_PREFIX)/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)
-	@cp ./terraform-provider-kubevirt $(DESTINATION_PREFIX)/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)
+install-local-provider: build $(GO)
+	@mkdir -p $(DESTINATION_PREFIX)/terraform.local/local/kubevirt/1.0.0/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)
+	@cp ./terraform-provider-kubevirt $(DESTINATION_PREFIX)/terraform.local/local/kubevirt/1.0.0/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)
+	@echo "==> Installing plugin to $(DESTINATION_PREFIX)/terraform.local/local/kubevirt/1.0.0/$(shell $(GO) env GOOS)_$(shell $(GO) env GOARCH)"
 
 test-fmt:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
@@ -54,24 +54,21 @@ test: $(GO) test-fmt
 	$(GO) test ./kubevirt/... $(TESTARGS) -timeout=30s -parallel=4
 
 functest: test-tools
-	export PATH=$(BIN_DIR)/$(PATH)
-	@sh -c "'$(CURDIR)/scripts/func-test.sh'"
+	$(CURDIR)/scripts/func-test.sh $(BIN_DIR)
 
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
 cluster-up:
-	sh -c "./cluster-up/up.sh" 
-	export KUBECONFIG=$(sh -c "cluster-up/kubeconfig.sh")
-	sh -c "./cluster-kubevirt-deploy/kubevirt-deploy.sh"
+	./kubevirtci up
 
 cluster-down:
-	sh -c "./cluster-up/down.sh" 
+	./kubevirtci down
 
 .PHONY: \
 	clean \
 	build \
-	install \
+	install-local-provider \
 	test-fmt \
 	test-vet \
 	fmt \

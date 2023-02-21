@@ -1,6 +1,6 @@
 package test_utils
 
-import "github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 func NullifySchemaSetFunction(ss *schema.Set) {
 	ss.F = nil

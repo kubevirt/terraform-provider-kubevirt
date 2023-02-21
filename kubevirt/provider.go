@@ -6,8 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/client"
 	"github.com/mitchellh/go-homedir"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -16,7 +15,7 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
-func Provider() terraform.ResourceProvider {
+func Provider() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"host": {

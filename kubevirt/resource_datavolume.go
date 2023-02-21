@@ -5,14 +5,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/client"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/schema/datavolume"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/utils"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/utils/patch"
 	"k8s.io/apimachinery/pkg/api/errors"
-	cdiv1 "kubevirt.io/containerized-data-importer/pkg/apis/core/v1alpha1"
+	cdiv1 "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
 )
 
 func resourceKubevirtDataVolume() *schema.Resource {
