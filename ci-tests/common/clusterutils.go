@@ -124,6 +124,7 @@ func ValidateVirtualMachine(vmName string, namespace string, expectedVM *kubevir
 		expectedVM.Generation = resultVM.Generation
 		expectedVM.CreationTimestamp = resultVM.CreationTimestamp
 		expectedVM.SelfLink = resultVM.SelfLink
+		expectedVM.Finalizers = resultVM.Finalizers
 
 		expectedVM.Status.Conditions = resultVM.Status.Conditions
 
