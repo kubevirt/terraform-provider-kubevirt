@@ -9,7 +9,7 @@ replace (
 
 require (
 	github.com/golang/mock v1.6.0
-	github.com/hashicorp/terraform-exec v0.18.0
+	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/hashicorp/terraform-plugin-docs v0.14.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.25.0
 	github.com/mitchellh/go-homedir v1.1.0
