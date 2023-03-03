@@ -23,8 +23,8 @@ require (
 	k8s.io/api v0.26.2
 	k8s.io/apimachinery v0.26.2
 	k8s.io/client-go v12.0.0+incompatible
-	kubevirt.io/api v0.58.0
-	kubevirt.io/containerized-data-importer-api v1.50.0
+	kubevirt.io/api v0.59.0
+	kubevirt.io/containerized-data-importer-api v1.55.0
 )
 
 require (
@@ -96,6 +96,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/oklog/run v1.0.0 // indirect
+	github.com/openshift/api v0.0.0-20211217221424-8779abfbd571 // indirect
 	github.com/openshift/custom-resource-status v1.1.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/posener/complete v1.2.3 // indirect
