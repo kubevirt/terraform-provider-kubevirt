@@ -2,10 +2,12 @@ package kubevirt
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"os"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/client"
 	"github.com/mitchellh/go-homedir"
@@ -102,23 +104,23 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"kubevirt_virtual_machine": resourceKubevirtVirtualMachine(),
-			"kubevirt_data_volume":     resourceKubevirtDataVolume(),
+			"kubevirt_virtual_machine":                      resourceKubevirtVirtualMachine(),
+			"kubevirt_virtual_machine_instance":             resourceKubevirtVirtualMachineInstance(),
+			"kubevirt_virtual_machine_instance_replica_set": resourceKubevirtVirtualMachineInstanceReplicaSet(),
+			"kubevirt_data_volume":                          resourceKubevirtDataVolume(),
 		},
 	}
-	p.ConfigureFunc = func(resourceData *schema.ResourceData) (interface{}, error) {
+	p.ConfigureContextFunc = func(ctx context.Context, resourceData *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		terraformVersion := p.TerraformVersion
 		if terraformVersion == "" {
-			// Terraform 0.12 introduced this field to the protocol
-			// We can therefore assume that if it's missing it's 0.10 or 0.11
 			terraformVersion = "0.11+compatible"
 		}
-		return providerConfigure(resourceData, terraformVersion)
+		return providerConfigure(ctx, resourceData, terraformVersion)
 	}
 	return p
 }
 
-func providerConfigure(resourceData *schema.ResourceData, terraformVersion string) (interface{}, error) {
+func providerConfigure(context context.Context, resourceData *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
 
 	var cfg *restclient.Config
 	var err error
@@ -128,7 +130,7 @@ func providerConfigure(resourceData *schema.ResourceData, terraformVersion strin
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, diag.FromErr(err)
 	}
 	if cfg == nil {
 		cfg = &restclient.Config{}

@@ -39,8 +39,8 @@ func networkFields() map[string]*schema.Schema {
 					"multus": {
 						Type:        schema.TypeList,
 						Description: "Multus network.",
-						MaxItems:    1,
-						Optional:    true,
+						// MaxItems:    1,
+						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"network_name": {
@@ -94,6 +94,7 @@ func expandNetworks(networks []interface{}) []kubevirtapiv1.Network {
 		if v, ok := in["network_source"].([]interface{}); ok {
 			result[i].NetworkSource = expandNetworkSource(v)
 		}
+
 	}
 
 	return result
@@ -110,11 +111,11 @@ func expandNetworkSource(networkSource []interface{}) kubevirtapiv1.NetworkSourc
 
 	if v, ok := in["pod"].([]interface{}); ok {
 		result.Pod = expandPodNetwork(v)
+	} else {
+		if v, ok := in["multus"].([]interface{}); ok {
+			result.Multus = expandMultusNetwork(v)
+		}
 	}
-	if v, ok := in["multus"].([]interface{}); ok {
-		result.Multus = expandMultusNetwork(v)
-	}
-
 	return result
 }
 
@@ -172,9 +173,10 @@ func flattenNetworkSource(in kubevirtapiv1.NetworkSource) []interface{} {
 
 	if in.Pod != nil {
 		att["pod"] = flattenPodNetwork(*in.Pod)
-	}
-	if in.Multus != nil {
-		att["multus"] = flattenMultusNetwork(*in.Multus)
+	} else {
+		if in.Multus != nil {
+			att["multus"] = flattenMultusNetwork(*in.Multus)
+		}
 	}
 
 	return []interface{}{att}
@@ -183,7 +185,9 @@ func flattenNetworkSource(in kubevirtapiv1.NetworkSource) []interface{} {
 func flattenPodNetwork(in kubevirtapiv1.PodNetwork) []interface{} {
 	att := make(map[string]interface{})
 
-	att["vm_network_cidr"] = in.VMNetworkCIDR
+	if in.VMNetworkCIDR != "" {
+		att["vm_network_cidr"] = in.VMNetworkCIDR
+	}
 
 	return []interface{}{att}
 }

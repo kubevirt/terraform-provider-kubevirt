@@ -5,51 +5,36 @@
 package mock
 
 import (
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
 	v1 "kubevirt.io/api/core/v1"
 	v1beta1 "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
+	reflect "reflect"
 )
 
-// MockClient is a mock of Client interface.
+// MockClient is a mock of Client interface
 type MockClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockClientMockRecorder
 }
 
-// MockClientMockRecorder is the mock recorder for MockClient.
+// MockClientMockRecorder is the mock recorder for MockClient
 type MockClientMockRecorder struct {
 	mock *MockClient
 }
 
-// NewMockClient creates a new mock instance.
+// NewMockClient creates a new mock instance
 func NewMockClient(ctrl *gomock.Controller) *MockClient {
 	mock := &MockClient{ctrl: ctrl}
 	mock.recorder = &MockClientMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use.
+// EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockClient) EXPECT() *MockClientMockRecorder {
 	return m.recorder
 }
 
-// CreateDataVolume mocks base method.
-func (m *MockClient) CreateDataVolume(vm *v1beta1.DataVolume) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateDataVolume", vm)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CreateDataVolume indicates an expected call of CreateDataVolume.
-func (mr *MockClientMockRecorder) CreateDataVolume(vm interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataVolume", reflect.TypeOf((*MockClient)(nil).CreateDataVolume), vm)
-}
-
-// CreateVirtualMachine mocks base method.
+// CreateVirtualMachine mocks base method
 func (m *MockClient) CreateVirtualMachine(vm *v1.VirtualMachine) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateVirtualMachine", vm)
@@ -57,56 +42,13 @@ func (m *MockClient) CreateVirtualMachine(vm *v1.VirtualMachine) error {
 	return ret0
 }
 
-// CreateVirtualMachine indicates an expected call of CreateVirtualMachine.
+// CreateVirtualMachine indicates an expected call of CreateVirtualMachine
 func (mr *MockClientMockRecorder) CreateVirtualMachine(vm interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateVirtualMachine", reflect.TypeOf((*MockClient)(nil).CreateVirtualMachine), vm)
 }
 
-// DeleteDataVolume mocks base method.
-func (m *MockClient) DeleteDataVolume(namespace, name string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteDataVolume", namespace, name)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteDataVolume indicates an expected call of DeleteDataVolume.
-func (mr *MockClientMockRecorder) DeleteDataVolume(namespace, name interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteDataVolume", reflect.TypeOf((*MockClient)(nil).DeleteDataVolume), namespace, name)
-}
-
-// DeleteVirtualMachine mocks base method.
-func (m *MockClient) DeleteVirtualMachine(namespace, name string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteVirtualMachine", namespace, name)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteVirtualMachine indicates an expected call of DeleteVirtualMachine.
-func (mr *MockClientMockRecorder) DeleteVirtualMachine(namespace, name interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVirtualMachine", reflect.TypeOf((*MockClient)(nil).DeleteVirtualMachine), namespace, name)
-}
-
-// GetDataVolume mocks base method.
-func (m *MockClient) GetDataVolume(namespace, name string) (*v1beta1.DataVolume, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDataVolume", namespace, name)
-	ret0, _ := ret[0].(*v1beta1.DataVolume)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetDataVolume indicates an expected call of GetDataVolume.
-func (mr *MockClientMockRecorder) GetDataVolume(namespace, name interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataVolume", reflect.TypeOf((*MockClient)(nil).GetDataVolume), namespace, name)
-}
-
-// GetVirtualMachine mocks base method.
+// GetVirtualMachine mocks base method
 func (m *MockClient) GetVirtualMachine(namespace, name string) (*v1.VirtualMachine, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVirtualMachine", namespace, name)
@@ -115,27 +57,13 @@ func (m *MockClient) GetVirtualMachine(namespace, name string) (*v1.VirtualMachi
 	return ret0, ret1
 }
 
-// GetVirtualMachine indicates an expected call of GetVirtualMachine.
+// GetVirtualMachine indicates an expected call of GetVirtualMachine
 func (mr *MockClientMockRecorder) GetVirtualMachine(namespace, name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVirtualMachine", reflect.TypeOf((*MockClient)(nil).GetVirtualMachine), namespace, name)
 }
 
-// UpdateDataVolume mocks base method.
-func (m *MockClient) UpdateDataVolume(namespace, name string, dv *v1beta1.DataVolume, data []byte) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateDataVolume", namespace, name, dv, data)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateDataVolume indicates an expected call of UpdateDataVolume.
-func (mr *MockClientMockRecorder) UpdateDataVolume(namespace, name, dv, data interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDataVolume", reflect.TypeOf((*MockClient)(nil).UpdateDataVolume), namespace, name, dv, data)
-}
-
-// UpdateVirtualMachine mocks base method.
+// UpdateVirtualMachine mocks base method
 func (m *MockClient) UpdateVirtualMachine(namespace, name string, vm *v1.VirtualMachine, data []byte) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateVirtualMachine", namespace, name, vm, data)
@@ -143,8 +71,193 @@ func (m *MockClient) UpdateVirtualMachine(namespace, name string, vm *v1.Virtual
 	return ret0
 }
 
-// UpdateVirtualMachine indicates an expected call of UpdateVirtualMachine.
+// UpdateVirtualMachine indicates an expected call of UpdateVirtualMachine
 func (mr *MockClientMockRecorder) UpdateVirtualMachine(namespace, name, vm, data interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateVirtualMachine", reflect.TypeOf((*MockClient)(nil).UpdateVirtualMachine), namespace, name, vm, data)
+}
+
+// DeleteVirtualMachine mocks base method
+func (m *MockClient) DeleteVirtualMachine(namespace, name string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteVirtualMachine", namespace, name)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteVirtualMachine indicates an expected call of DeleteVirtualMachine
+func (mr *MockClientMockRecorder) DeleteVirtualMachine(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVirtualMachine", reflect.TypeOf((*MockClient)(nil).DeleteVirtualMachine), namespace, name)
+}
+
+// CreateVirtualMachineInstance mocks base method
+func (m *MockClient) CreateVirtualMachineInstance(vmi *v1.VirtualMachineInstance) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateVirtualMachineInstance", vmi)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateVirtualMachineInstance indicates an expected call of CreateVirtualMachineInstance
+func (mr *MockClientMockRecorder) CreateVirtualMachineInstance(vmi interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateVirtualMachineInstance", reflect.TypeOf((*MockClient)(nil).CreateVirtualMachineInstance), vmi)
+}
+
+// GetVirtualMachineInstance mocks base method
+func (m *MockClient) GetVirtualMachineInstance(namespace, name string) (*v1.VirtualMachineInstance, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetVirtualMachineInstance", namespace, name)
+	ret0, _ := ret[0].(*v1.VirtualMachineInstance)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVirtualMachineInstance indicates an expected call of GetVirtualMachineInstance
+func (mr *MockClientMockRecorder) GetVirtualMachineInstance(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVirtualMachineInstance", reflect.TypeOf((*MockClient)(nil).GetVirtualMachineInstance), namespace, name)
+}
+
+// UpdateVirtualMachineInstance mocks base method
+func (m *MockClient) UpdateVirtualMachineInstance(namespace, name string, vmi *v1.VirtualMachineInstance, data []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateVirtualMachineInstance", namespace, name, vmi, data)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateVirtualMachineInstance indicates an expected call of UpdateVirtualMachineInstance
+func (mr *MockClientMockRecorder) UpdateVirtualMachineInstance(namespace, name, vmi, data interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateVirtualMachineInstance", reflect.TypeOf((*MockClient)(nil).UpdateVirtualMachineInstance), namespace, name, vmi, data)
+}
+
+// DeleteVirtualMachineInstance mocks base method
+func (m *MockClient) DeleteVirtualMachineInstance(namespace, name string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteVirtualMachineInstance", namespace, name)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteVirtualMachineInstance indicates an expected call of DeleteVirtualMachineInstance
+func (mr *MockClientMockRecorder) DeleteVirtualMachineInstance(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVirtualMachineInstance", reflect.TypeOf((*MockClient)(nil).DeleteVirtualMachineInstance), namespace, name)
+}
+
+// CreateVirtualMachineInstanceReplicaSet mocks base method
+func (m *MockClient) CreateVirtualMachineInstanceReplicaSet(vmirs *v1.VirtualMachineInstanceReplicaSet) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateVirtualMachineInstanceReplicaSet", vmirs)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateVirtualMachineInstanceReplicaSet indicates an expected call of CreateVirtualMachineInstanceReplicaSet
+func (mr *MockClientMockRecorder) CreateVirtualMachineInstanceReplicaSet(vmirs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateVirtualMachineInstanceReplicaSet", reflect.TypeOf((*MockClient)(nil).CreateVirtualMachineInstanceReplicaSet), vmirs)
+}
+
+// GetVirtualMachineInstanceReplicaSet mocks base method
+func (m *MockClient) GetVirtualMachineInstanceReplicaSet(namespace, name string) (*v1.VirtualMachineInstanceReplicaSet, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetVirtualMachineInstanceReplicaSet", namespace, name)
+	ret0, _ := ret[0].(*v1.VirtualMachineInstanceReplicaSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVirtualMachineInstanceReplicaSet indicates an expected call of GetVirtualMachineInstanceReplicaSet
+func (mr *MockClientMockRecorder) GetVirtualMachineInstanceReplicaSet(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVirtualMachineInstanceReplicaSet", reflect.TypeOf((*MockClient)(nil).GetVirtualMachineInstanceReplicaSet), namespace, name)
+}
+
+// UpdateVirtualMachineInstanceReplicaSet mocks base method
+func (m *MockClient) UpdateVirtualMachineInstanceReplicaSet(namespace, name string, vmirs *v1.VirtualMachineInstanceReplicaSet, data []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateVirtualMachineInstanceReplicaSet", namespace, name, vmirs, data)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateVirtualMachineInstanceReplicaSet indicates an expected call of UpdateVirtualMachineInstanceReplicaSet
+func (mr *MockClientMockRecorder) UpdateVirtualMachineInstanceReplicaSet(namespace, name, vmirs, data interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateVirtualMachineInstanceReplicaSet", reflect.TypeOf((*MockClient)(nil).UpdateVirtualMachineInstanceReplicaSet), namespace, name, vmirs, data)
+}
+
+// DeleteVirtualMachineInstanceReplicaSet mocks base method
+func (m *MockClient) DeleteVirtualMachineInstanceReplicaSet(namespace, name string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteVirtualMachineInstanceReplicaSet", namespace, name)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteVirtualMachineInstanceReplicaSet indicates an expected call of DeleteVirtualMachineInstanceReplicaSet
+func (mr *MockClientMockRecorder) DeleteVirtualMachineInstanceReplicaSet(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVirtualMachineInstanceReplicaSet", reflect.TypeOf((*MockClient)(nil).DeleteVirtualMachineInstanceReplicaSet), namespace, name)
+}
+
+// CreateDataVolume mocks base method
+func (m *MockClient) CreateDataVolume(vm *v1beta1.DataVolume) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDataVolume", vm)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateDataVolume indicates an expected call of CreateDataVolume
+func (mr *MockClientMockRecorder) CreateDataVolume(vm interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataVolume", reflect.TypeOf((*MockClient)(nil).CreateDataVolume), vm)
+}
+
+// GetDataVolume mocks base method
+func (m *MockClient) GetDataVolume(namespace, name string) (*v1beta1.DataVolume, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataVolume", namespace, name)
+	ret0, _ := ret[0].(*v1beta1.DataVolume)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDataVolume indicates an expected call of GetDataVolume
+func (mr *MockClientMockRecorder) GetDataVolume(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataVolume", reflect.TypeOf((*MockClient)(nil).GetDataVolume), namespace, name)
+}
+
+// UpdateDataVolume mocks base method
+func (m *MockClient) UpdateDataVolume(namespace, name string, dv *v1beta1.DataVolume, data []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateDataVolume", namespace, name, dv, data)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateDataVolume indicates an expected call of UpdateDataVolume
+func (mr *MockClientMockRecorder) UpdateDataVolume(namespace, name, dv, data interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDataVolume", reflect.TypeOf((*MockClient)(nil).UpdateDataVolume), namespace, name, dv, data)
+}
+
+// DeleteDataVolume mocks base method
+func (m *MockClient) DeleteDataVolume(namespace, name string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteDataVolume", namespace, name)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteDataVolume indicates an expected call of DeleteDataVolume
+func (mr *MockClientMockRecorder) DeleteDataVolume(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteDataVolume", reflect.TypeOf((*MockClient)(nil).DeleteDataVolume), namespace, name)
 }

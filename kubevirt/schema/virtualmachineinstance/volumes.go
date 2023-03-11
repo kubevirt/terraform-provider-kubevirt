@@ -37,6 +37,26 @@ func volumesFields() map[string]*schema.Schema {
 							},
 						},
 					},
+					"container_disk": {
+						Type:        schema.TypeList,
+						Description: "ContainerDisk are ephemeral storage devices that can be assigned to any number of active VirtualMachineInstances..",
+						MaxItems:    1,
+						Optional:    true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"image": {
+									Type:        schema.TypeString,
+									Description: "Name represents the docker image name.",
+									Optional:    true,
+								},
+								"image_pull_secret": {
+									Type:        schema.TypeString,
+									Description: "Secret used to pull the image.",
+									Optional:    true,
+								},
+							},
+						},
+					},
 					"cloud_init_config_drive": {
 						Type:        schema.TypeList,
 						Description: "CloudInitConfigDrive represents a cloud-init Config Drive user-data source.",
@@ -135,7 +155,9 @@ func expandVolumeSource(volumeSource []interface{}) kubevirtapiv1.VolumeSource {
 	}
 
 	in := volumeSource[0].(map[string]interface{})
-
+	if v, ok := in["container_disk"].([]interface{}); ok {
+		result.ContainerDisk = expandContainerDisk(v)
+	}
 	if v, ok := in["data_volume"].([]interface{}); ok {
 		result.DataVolume = expandDataVolume(v)
 	}
@@ -144,6 +166,25 @@ func expandVolumeSource(volumeSource []interface{}) kubevirtapiv1.VolumeSource {
 	}
 	if v, ok := in["service_account"].([]interface{}); ok {
 		result.ServiceAccount = expandServiceAccount(v)
+	}
+
+	return result
+}
+
+func expandContainerDisk(containerDiskSource []interface{}) *kubevirtapiv1.ContainerDiskSource {
+	if len(containerDiskSource) == 0 || containerDiskSource[0] == nil {
+		return nil
+	}
+
+	result := &kubevirtapiv1.ContainerDiskSource{}
+	in := containerDiskSource[0].(map[string]interface{})
+
+	if v, ok := in["image"].(string); ok {
+		result.Image = v
+	}
+
+	if v, ok := in["image_pull_secret"].(string); ok {
+		result.ImagePullSecret = v
 	}
 
 	return result

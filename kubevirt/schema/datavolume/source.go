@@ -9,8 +9,9 @@ import (
 
 func dataVolumeSourceFields() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"http": dataVolumeSourceHTTPSchema(),
-		"pvc":  dataVolumeSourcePVCSchema(),
+		"http":     dataVolumeSourceHTTPSchema(),
+		"registry": dataVolumeSourceRegistrySchema(),
+		"pvc":      dataVolumeSourcePVCSchema(),
 	}
 }
 
@@ -47,6 +48,41 @@ func dataVolumeSourceHTTPFields() map[string]*schema.Schema {
 			Optional:    true,
 		},
 	}
+}
+
+func dataVolumeSourceRegistryFields() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"url": {
+			Type:        schema.TypeString,
+			Description: "url is the URL of the http source.",
+			Optional:    true,
+		},
+		"secret_ref": {
+			Type:        schema.TypeString,
+			Description: "Secret_ref provides the secret reference needed to access the HTTP source.",
+			Optional:    true,
+		},
+		"cert_config_map": {
+			Type:        schema.TypeString,
+			Description: "Cert_config_map provides a reference to the Registry certs.",
+			Optional:    true,
+		},
+	}
+}
+
+func dataVolumeSourceRegistrySchema() *schema.Schema {
+	fields := dataVolumeSourceRegistryFields()
+
+	return &schema.Schema{
+		Type:        schema.TypeList,
+		Description: "DataVolumeSourceHTTP provides the parameters to create a Data Volume from an HTTP source.",
+		Optional:    true,
+		MaxItems:    1,
+		Elem: &schema.Resource{
+			Schema: fields,
+		},
+	}
+
 }
 
 func dataVolumeSourceHTTPSchema() *schema.Schema {
@@ -107,7 +143,24 @@ func expandDataVolumeSource(dataVolumeSource []interface{}) *cdiv1.DataVolumeSou
 
 	result.HTTP = expandDataVolumeSourceHTTP(in["http"].([]interface{}))
 	result.PVC = expandDataVolumeSourcePVC(in["pvc"].([]interface{}))
+	result.Registry = expandDataVolumeSourceRegistry(in["registry"].([]interface{}))
 
+	return result
+}
+
+func expandDataVolumeSourceRegistry(dataVolumeSourceRegistry []interface{}) *cdiv1.DataVolumeSourceRegistry {
+
+	if len(dataVolumeSourceRegistry) == 0 || dataVolumeSourceRegistry[0] == nil {
+		return nil
+	}
+
+	result := &cdiv1.DataVolumeSourceRegistry{}
+
+	in := dataVolumeSourceRegistry[0].(map[string]interface{})
+
+	result.URL = in["url"].(*string)
+	result.SecretRef = in["secret_ref"].(*string)
+	result.CertConfigMap = in["cert_config_map"].(*string)
 	return result
 }
 
@@ -163,6 +216,9 @@ func flattenDataVolumeSource(in *cdiv1.DataVolumeSource) []interface{} {
 	if in.PVC != nil {
 		att["pvc"] = flattenDataVolumeSourcePVC(*in.PVC)
 	}
+	if in.Registry != nil {
+		att["registry"] = flattenDataVolumeSourceRegistry(*in.Registry)
+	}
 
 	return []interface{}{att}
 }
@@ -180,6 +236,15 @@ func flattenDataVolumeSourcePVC(in cdiv1.DataVolumeSourcePVC) []interface{} {
 	att := map[string]interface{}{
 		"namespace": in.Namespace,
 		"name":      in.Name,
+	}
+	return []interface{}{att}
+}
+
+func flattenDataVolumeSourceRegistry(in cdiv1.DataVolumeSourceRegistry) []interface{} {
+	att := map[string]interface{}{
+		"url":             in.URL,
+		"secret_ref":      in.SecretRef,
+		"cert_config_map": in.CertConfigMap,
 	}
 	return []interface{}{att}
 }

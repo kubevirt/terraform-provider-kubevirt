@@ -4,3 +4,4 @@ _examples/**/.terraform
 _ci-configs
 build/_output
 cluster-up
+.vscode/
