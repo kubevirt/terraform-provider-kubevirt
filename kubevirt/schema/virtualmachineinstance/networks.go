@@ -186,9 +186,7 @@ func flattenNetworkSource(in kubevirtapiv1.NetworkSource) []interface{} {
 func flattenPodNetwork(in kubevirtapiv1.PodNetwork) []interface{} {
 	att := make(map[string]interface{})
 
-	if in.VMNetworkCIDR != "" {
-		att["vm_network_cidr"] = in.VMNetworkCIDR
-	}
+	att["vm_network_cidr"] = in.VMNetworkCIDR
 
 	return []interface{}{att}
 }
