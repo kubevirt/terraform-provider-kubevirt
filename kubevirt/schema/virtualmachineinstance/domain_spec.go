@@ -59,8 +59,9 @@ func domainSpecFields() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"watchdog": {
-						Type:        schema.TypeMap,
+						Type:        schema.TypeList,
 						Description: "Watchdog describes the watchdog device that will be added to the vmi.",
+						MaxItems:    1,
 						Optional:    true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
