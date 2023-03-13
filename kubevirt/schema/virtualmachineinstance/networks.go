@@ -40,7 +40,7 @@ func networkFields() map[string]*schema.Schema {
 						Type:        schema.TypeList,
 						Description: "Multus network.",
 						MaxItems:    1,
-						Optional: true,
+						Optional:    true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"network_name": {
@@ -112,11 +112,11 @@ func expandNetworkSource(networkSource []interface{}) kubevirtapiv1.NetworkSourc
 	if v, ok := in["pod"].([]interface{}); ok {
 		result.Pod = expandPodNetwork(v)
 	}
-	
-		if v, ok := in["multus"].([]interface{}); ok {
-			result.Multus = expandMultusNetwork(v)
-		}
-	
+
+	if v, ok := in["multus"].([]interface{}); ok {
+		result.Multus = expandMultusNetwork(v)
+	}
+
 	return result
 }
 
