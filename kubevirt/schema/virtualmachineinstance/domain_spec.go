@@ -385,21 +385,19 @@ func expandInputs(inputs []interface{}) []kubevirtapiv1.Input {
 			switch v {
 			case "usb":
 				result[i].Bus = kubevirtapiv1.InputBusUSB
-				break
+
 			case "virtio":
 				result[i].Bus = kubevirtapiv1.InputBusVirtio
-				break
+
 			}
 		}
 		if v, ok := in["type"].(string); ok {
 			switch v {
 			case "tablet":
 				result[i].Type = kubevirtapiv1.InputTypeTablet
-				break
 
 			case "keyboard":
 				result[i].Type = kubevirtapiv1.InputTypeKeyboard
-				break
 
 			}
 		}
@@ -447,16 +445,16 @@ func expandDiskTarget(disk []interface{}) *kubevirtapiv1.DiskTarget {
 		switch v {
 		case "virtio":
 			result.Bus = kubevirtapiv1.DiskBusVirtio
-			break
+
 		case "sata":
 			result.Bus = kubevirtapiv1.DiskBusSATA
-			break
+
 		case "scsi":
 			result.Bus = kubevirtapiv1.DiskBusSCSI
-			break
+
 		case "usb":
 			result.Bus = kubevirtapiv1.DiskBusUSB
-			break
+
 		}
 	}
 	if v, ok := in["read_only"].(bool); ok {
@@ -513,17 +511,25 @@ func expandInterfaceBindingMethod(interfaceBindingMethod string) kubevirtapiv1.I
 
 func flattenDomainSpec(in kubevirtapiv1.DomainSpec) []interface{} {
 	att := make(map[string]interface{})
-	att["machine"] = flattenMachine(*in.Machine)
+	if in.Machine != nil {
+		att["machine"] = flattenMachine(in.Machine)
+	}
 	att["resources"] = flattenResources(in.Resources)
 	att["devices"] = flattenDevices(in.Devices)
 
 	return []interface{}{att}
 }
 
-func flattenMachine(in kubevirtapiv1.Machine) []interface{} {
+func flattenMachine(in *kubevirtapiv1.Machine) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
 	att := make(map[string]interface{})
 
-	att["type"] = in.Type
+	if in.Type != "" {
+		att["type"] = in.Type
+	}
 
 	return []interface{}{att}
 }
@@ -542,8 +548,12 @@ func flattenDevices(in kubevirtapiv1.Devices) []interface{} {
 	att := make(map[string]interface{})
 
 	att["disk"] = flattenDisks(in.Disks)
-	att["input"] = flattenInput(in.Inputs)
-	att["gpu"] = flattenGPU(in.GPUs)
+	if len(in.Inputs) > 0 {
+		att["input"] = flattenInput(in.Inputs)
+	}
+	if len(in.GPUs) > 0 {
+		att["gpu"] = flattenGPU(in.GPUs)
+	}
 	att["interface"] = flattenInterfaces(in.Interfaces)
 
 	return []interface{}{att}
@@ -560,8 +570,13 @@ func flattenDisks(in []kubevirtapiv1.Disk) []interface{} {
 		if v.BootOrder != nil {
 			c["boot_order"] = *v.BootOrder
 		}
-		c["serial"] = v.Serial
-		c["tag"] = v.Tag
+		if v.Serial != "" {
+			c["serial"] = v.Serial
+		}
+
+		if v.Tag != "" {
+			c["tag"] = v.Tag
+		}
 
 		att[i] = c
 	}
@@ -637,7 +652,9 @@ func flattenInterfaces(in []kubevirtapiv1.Interface) []interface{} {
 		// switch v.InterfaceBindingMethod {
 		// 	case kubevirtapiv1.Interfac
 		// }
-		c["model"] = v.Model
+		if v.Model != "" {
+			c["model"] = v.Model
+		}
 
 		att[i] = c
 	}

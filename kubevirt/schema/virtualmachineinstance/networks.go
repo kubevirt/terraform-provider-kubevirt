@@ -137,11 +137,12 @@ func expandPodNetwork(pod []interface{}) *kubevirtapiv1.PodNetwork {
 }
 
 func expandMultusNetwork(multus []interface{}) *kubevirtapiv1.MultusNetwork {
+	result := &kubevirtapiv1.MultusNetwork{}
+
 	if len(multus) == 0 || multus[0] == nil {
-		return nil
+		return result
 	}
 
-	result := &kubevirtapiv1.MultusNetwork{}
 	in := multus[0].(map[string]interface{})
 
 	if v, ok := in["network_name"].(string); ok {
@@ -174,10 +175,9 @@ func flattenNetworkSource(in kubevirtapiv1.NetworkSource) []interface{} {
 
 	if in.Pod != nil {
 		att["pod"] = flattenPodNetwork(*in.Pod)
-	} else {
-		if in.Multus != nil {
-			att["multus"] = flattenMultusNetwork(*in.Multus)
-		}
+	}
+	if in.Multus != nil {
+		att["multus"] = flattenMultusNetwork(*in.Multus)
 	}
 
 	return []interface{}{att}
