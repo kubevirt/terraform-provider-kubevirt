@@ -142,8 +142,18 @@ func expandDataVolumeSource(dataVolumeSource []interface{}) *cdiv1.DataVolumeSou
 	in := dataVolumeSource[0].(map[string]interface{})
 
 	result.HTTP = expandDataVolumeSourceHTTP(in["http"].([]interface{}))
-	result.PVC = expandDataVolumeSourcePVC(in["pvc"].([]interface{}))
-	result.Registry = expandDataVolumeSourceRegistry(in["registry"].([]interface{}))
+
+	if v, ok := in["http"].([]interface{}); ok && len(v) > 0 {
+		result.HTTP = expandDataVolumeSourceHTTP(in["http"].([]interface{}))
+	}
+
+	if v, ok := in["pvc"].([]interface{}); ok && len(v) > 0 {
+		result.PVC = expandDataVolumeSourcePVC(in["pvc"].([]interface{}))
+	}
+
+	if v, ok := in["registry"].([]interface{}); ok && len(v) > 0 {
+		result.Registry = expandDataVolumeSourceRegistry(in["registry"].([]interface{}))
+	}
 
 	return result
 }
