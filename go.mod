@@ -21,7 +21,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.26.2
-	k8s.io/apimachinery v0.26.2
+	k8s.io/apimachinery v0.26.3
 	k8s.io/client-go v12.0.0+incompatible
 	kubevirt.io/api v0.59.0
 	kubevirt.io/containerized-data-importer-api v1.56.0
