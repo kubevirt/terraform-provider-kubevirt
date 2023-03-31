@@ -5,7 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/kubevirt/terraform-provider-kubevirt/kubevirt/schema/k8s"
-	kubevirtapiv1 "kubevirt.io/api/core/v1"
+	k8sv1 "k8s.io/api/core/v1"
+	kubevirtapiv1 "kubevirt.io/client-go/api/v1"
 )
 
 func volumesFields() map[string]*schema.Schema {
@@ -32,6 +33,21 @@ func volumesFields() map[string]*schema.Schema {
 								"name": {
 									Type:        schema.TypeString,
 									Description: "Name represents the name of the DataVolume in the same namespace.",
+									Required:    true,
+								},
+							},
+						},
+					},
+					"persistent_volume_claim": {
+						Type:        schema.TypeList,
+						Description: "PersistentVolumeClaim represents an existing PVC for this volume.",
+						MaxItems:    1,
+						Optional:    true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"claim_name": {
+									Type:        schema.TypeString,
+									Description: "ClaimName represents the name of the PVC in the same namespace.",
 									Required:    true,
 								},
 							},
@@ -139,6 +155,9 @@ func expandVolumeSource(volumeSource []interface{}) kubevirtapiv1.VolumeSource {
 	if v, ok := in["data_volume"].([]interface{}); ok {
 		result.DataVolume = expandDataVolume(v)
 	}
+	if v, ok := in["persistent_volume_claim"].([]interface{}); ok {
+		result.PersistentVolumeClaim = expandPersistentVolumeClaim(v)
+	}
 	if v, ok := in["cloud_init_config_drive"].([]interface{}); ok {
 		result.CloudInitConfigDrive = expandCloudInitConfigDrive(v)
 	}
@@ -159,6 +178,21 @@ func expandDataVolume(dataVolumeSource []interface{}) *kubevirtapiv1.DataVolumeS
 
 	if v, ok := in["name"].(string); ok {
 		result.Name = v
+	}
+
+	return result
+}
+
+func expandPersistentVolumeClaim(persistentVolumeClaimSource []interface{}) *k8sv1.PersistentVolumeClaimVolumeSource {
+	if len(persistentVolumeClaimSource) == 0 || persistentVolumeClaimSource[0] == nil {
+		return nil
+	}
+
+	result := &k8sv1.PersistentVolumeClaimVolumeSource{}
+	in := persistentVolumeClaimSource[0].(map[string]interface{})
+
+	if v, ok := in["claim_name"].(string); ok {
+		result.ClaimName = v
 	}
 
 	return result
@@ -230,6 +264,9 @@ func flattenVolumeSource(in kubevirtapiv1.VolumeSource) []interface{} {
 	if in.DataVolume != nil {
 		att["data_volume"] = flattenDataVolume(*in.DataVolume)
 	}
+	if in.PersistentVolumeClaim != nil {
+		att["persistent_volume_claim"] = flattenPersistentVolumeClaim(*in.PersistentVolumeClaim)
+	}
 	if in.CloudInitConfigDrive != nil {
 		att["cloud_init_config_drive"] = flattenCloudInitConfigDrive(*in.CloudInitConfigDrive)
 	}
@@ -244,6 +281,14 @@ func flattenDataVolume(in kubevirtapiv1.DataVolumeSource) []interface{} {
 	att := make(map[string]interface{})
 
 	att["name"] = in.Name
+
+	return []interface{}{att}
+}
+
+func flattenPersistentVolumeClaim(in k8sv1.PersistentVolumeClaimVolumeSource) []interface{} {
+	att := make(map[string]interface{})
+
+	att["claim_name"] = in.ClaimName
 
 	return []interface{}{att}
 }

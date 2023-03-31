@@ -43,6 +43,30 @@ func domainSpecFields() map[string]*schema.Schema {
 			Required:    true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
+					"input": {
+						Type:        schema.TypeList,
+						Description: "Inputs describes human-input devices which are connected to the vmi.",
+						Optional:    true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"name": {
+									Type:        schema.TypeString,
+									Description: "Name is the device name",
+									Required:    true,
+								},
+								"type": {
+									Type:        schema.TypeString,
+									Description: "Type is the device type",
+									Required:    true,
+								},
+								"bus": {
+									Type:        schema.TypeString,
+									Description: "Bus is the device bus that the device is attached to",
+									Required:    true,
+								},
+							},
+						},
+					},
 					"disk": {
 						Type:        schema.TypeList,
 						Description: "Disks describes disks, cdroms, floppy and luns which are connected to the vmi.",
@@ -84,6 +108,34 @@ func domainSpecFields() map[string]*schema.Schema {
 													},
 												},
 											},
+											"cdrom": {
+												Type:        schema.TypeList,
+												Description: "Attach a volume as a CDROM to the vmi.",
+												Optional:    true,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"bus": {
+															Type:        schema.TypeString,
+															Description: "Bus indicates the type of cdrom device to emulate.",
+															Optional:    true,
+														},
+														"read_only": {
+															Type:        schema.TypeBool,
+															Description: "ReadOnly. Defaults to true.",
+															Optional:    true,
+														},
+														"tray": {
+															Type:        schema.TypeString,
+															Description: "Tray indicates if the tray of the device is open or closed.",
+															Optional:    true,
+															ValidateFunc: validation.StringInSlice([]string{
+																"open",
+																"closed",
+															}, false),
+														},
+													},
+												},
+											},
 										},
 									},
 								},
@@ -116,6 +168,35 @@ func domainSpecFields() map[string]*schema.Schema {
 									}, false),
 									Description: "Represents the method which will be used to connect the interface to the guest.",
 									Required:    true,
+								},
+								"ports": {
+									Type: schema.TypeList,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"name": {
+												Type:        schema.TypeString,
+												Description: "Name of the service using the forwarded port.",
+												Optional:    true,
+											},
+											"port": {
+												Type:         schema.TypeInt,
+												Description:  "Port number of the forwarded port.",
+												Required:     true,
+												ValidateFunc: validation.IntBetween(1, 65535),
+											},
+											"protocol": {
+												Type:        schema.TypeString,
+												Description: "Protocol for the forwarded port.",
+												Optional:    true,
+												ValidateFunc: validation.StringInSlice([]string{
+													"TCP",
+													"UDP",
+												}, false),
+											},
+										},
+									},
+									Description: "Ports that will be forwarded to the guest when using Masquerade.",
+									Optional:    true,
 								},
 							},
 						},
@@ -208,6 +289,9 @@ func expandDevices(devices []interface{}) (kubevirtapiv1.Devices, error) {
 
 	in := devices[0].(map[string]interface{})
 
+	if v, ok := in["input"].([]interface{}); ok {
+		result.Inputs = expandInputs(v)
+	}
 	if v, ok := in["disk"].([]interface{}); ok {
 		result.Disks = expandDisks(v)
 	}
@@ -242,6 +326,30 @@ func expandDisks(disks []interface{}) []kubevirtapiv1.Disk {
 	return result
 }
 
+func expandPorts(ports []interface{}) []kubevirtapiv1.Port {
+	result := make([]kubevirtapiv1.Port, len(ports))
+
+	if len(ports) == 0 || ports[0] == nil {
+		return result
+	}
+
+	for i, condition := range ports {
+		in := condition.(map[string]interface{})
+
+		if v, ok := in["name"].(string); ok {
+			result[i].Name = v
+		}
+		if v, ok := in["protocol"].(string); ok {
+			result[i].Protocol = v
+		}
+		if v, ok := in["port"].(int32); ok {
+			result[i].Port = v
+		}
+	}
+
+	return result
+}
+
 func expandDiskDevice(diskDevice []interface{}) kubevirtapiv1.DiskDevice {
 	result := kubevirtapiv1.DiskDevice{}
 
@@ -251,8 +359,33 @@ func expandDiskDevice(diskDevice []interface{}) kubevirtapiv1.DiskDevice {
 
 	in := diskDevice[0].(map[string]interface{})
 
+	if v, ok := in["cdrom"].([]interface{}); ok {
+		result.CDRom = expandCDRomTarget(v)
+	}
 	if v, ok := in["disk"].([]interface{}); ok {
 		result.Disk = expandDiskTarget(v)
+	}
+
+	return result
+}
+
+func expandCDRomTarget(cdrom []interface{}) *kubevirtapiv1.CDRomTarget {
+	if len(cdrom) == 0 || cdrom[0] == nil {
+		return nil
+	}
+
+	result := &kubevirtapiv1.CDRomTarget{}
+
+	in := cdrom[0].(map[string]interface{})
+
+	if v, ok := in["bus"].(string); ok {
+		result.Bus = v
+	}
+	if v, ok := in["read_only"].(*bool); ok {
+		result.ReadOnly = v
+	}
+	if v, ok := in["tray"].(kubevirtapiv1.TrayState); ok {
+		result.Tray = v
 	}
 
 	return result
@@ -295,6 +428,30 @@ func expandInterfaces(interfaces []interface{}) []kubevirtapiv1.Interface {
 		}
 		if v, ok := in["interface_binding_method"].(string); ok {
 			result[i].InterfaceBindingMethod = expandInterfaceBindingMethod(v)
+		}
+	}
+
+	return result
+}
+
+func expandInputs(inputs []interface{}) []kubevirtapiv1.Input {
+	result := make([]kubevirtapiv1.Input, len(inputs))
+
+	if len(inputs) == 0 || inputs[0] == nil {
+		return result
+	}
+
+	for i, condition := range inputs {
+		in := condition.(map[string]interface{})
+
+		if v, ok := in["name"].(string); ok {
+			result[i].Name = v
+		}
+		if v, ok := in["type"].(string); ok {
+			result[i].Type = v
+		}
+		if v, ok := in["bus"].(string); ok {
+			result[i].Bus = v
 		}
 	}
 
@@ -362,12 +519,41 @@ func flattenDisks(in []kubevirtapiv1.Disk) []interface{} {
 	return att
 }
 
+func flattenPorts(in []kubevirtapiv1.Port) []interface{} {
+	att := make([]interface{}, len(in))
+
+	for i, v := range in {
+		c := make(map[string]interface{})
+
+		c["name"] = v.Name
+		c["protocol"] = v.Protocol
+		c["port"] = v.Port
+
+		att[i] = c
+	}
+
+	return att
+}
+
 func flattenDiskDevice(in kubevirtapiv1.DiskDevice) []interface{} {
 	att := make(map[string]interface{})
 
 	if in.Disk != nil {
 		att["disk"] = flattenDiskTarget(*in.Disk)
 	}
+	if in.CDRom != nil {
+		att["cdrom"] = flattenCDRomTarget(*in.CDRom)
+	}
+
+	return []interface{}{att}
+}
+
+func flattenCDRomTarget(in kubevirtapiv1.CDRomTarget) []interface{} {
+	att := make(map[string]interface{})
+
+	att["bus"] = in.Bus
+	att["read_only"] = in.ReadOnly
+	att["tray"] = in.Tray
 
 	return []interface{}{att}
 }
@@ -390,6 +576,22 @@ func flattenInterfaces(in []kubevirtapiv1.Interface) []interface{} {
 
 		c["name"] = v.Name
 		c["interface_binding_method"] = flattenInterfaceBindingMethod(v.InterfaceBindingMethod)
+
+		att[i] = c
+	}
+
+	return att
+}
+
+func flattenInputs(in []kubevirtapiv1.Input) []interface{} {
+	att := make([]interface{}, len(in))
+
+	for i, v := range in {
+		c := make(map[string]interface{})
+
+		c["name"] = v.Name
+		c["type"] = v.Type
+		c["bus"] = v.Bus
 
 		att[i] = c
 	}
