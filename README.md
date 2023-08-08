@@ -33,7 +33,7 @@ In order to use it in your computer, run install command inside the repository:
 $ make install
 ```
 
-You can find examples how to use the provider in [_example directory](https://github.com/nirarg/terraform-provider-kubevirt/tree/master/_examples)
+You can find examples how to use the provider in [_example directory](https://github.com/nirarg/terraform-provider-kubevirt/tree/main/_examples)
 
 ## Contributing to the Provider
 
