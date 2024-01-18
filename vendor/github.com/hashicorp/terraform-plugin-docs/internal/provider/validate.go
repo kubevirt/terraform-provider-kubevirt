@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -6,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mitchellh/cli"
+	"github.com/hashicorp/cli"
 )
 
 func Validate(ui cli.Ui) error {
@@ -95,6 +98,7 @@ func validateStaticDocs(ui cli.Ui, dir string) error {
 			"data-sources",
 			"guides",
 			"resources",
+			"cdktf",
 		),
 		checkBlockedExtensions(
 			".html.md.tmpl",
